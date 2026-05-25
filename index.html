@@ -254,14 +254,14 @@
   </div>
   <div class="nav-section">
     <div class="nav-label">Pengaturan</div>
-    <div class="nav-item"><i class="fas fa-sync" id="nav-sync-icon"></i> Sinkronisasi DB</div>
-    <div class="nav-item"><i class="fas fa-cog"></i> Pengaturan</div>
+    <div class="nav-item" onclick="syncDatabase()"><i class="fas fa-sync" id="nav-sync-icon"></i> Sinkronisasi DB</div>
+    <div class="nav-item" onclick="showPage('settings')"><i class="fas fa-cog"></i> Pengaturan</div>
   </div>
   <div class="sidebar-footer">
     <div class="user-info">
-      <div class="avatar">RK</div>
+      <div class="avatar">NM</div>
       <div class="user-detail">
-        <div class="user-name">Rahman Kusuma</div>
+        <div class="user-name">nu muka iyeu admin</div>
         <div class="user-role">Admin Pajak Desa</div>
       </div>
     </div>
@@ -280,11 +280,9 @@
         <div class="sync-dot loading" id="syncDot"></div>
         <span id="syncLabel">Memuat data...</span>
       </div>
-      <div class="tahun-select" onclick="switchTahun()">
-        <i class="fas fa-calendar-alt" style="font-size:13px"></i>
-        <span id="tahun-aktif">Tahun 2024</span>
-        <i class="fas fa-chevron-down" style="font-size:10px"></i>
-      </div>
+      <select class="tahun-select" id="tahunSelect" onchange="switchTahun(this.value)" title="Pilih tahun pajak">
+        <option value="2024" selected>Tahun 2024</option>
+      </select>
       <button class="btn-export" onclick="window.print()"><i class="fas fa-download"></i> Export</button>
       <button class="btn-tambah" onclick="openModal()"><i class="fas fa-plus"></i> Tambah Data</button>
     </div>
@@ -332,7 +330,6 @@
             <div style="flex:1" id="pieDetail">
               <div class="summary-row"><span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#1a6b3c;display:inline-block;margin-right:7px"></span>Lunas</span><div style="text-align:right"><div class="sv" id="pie-lunas">—</div><div style="font-size:11px;color:var(--teks-muted)" id="pie-lunas-pct">—</div></div></div>
               <div class="summary-row"><span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#c0392b;display:inline-block;margin-right:7px"></span>Belum Bayar</span><div style="text-align:right"><div class="sv" id="pie-belum">—</div><div style="font-size:11px;color:var(--teks-muted)" id="pie-belum-pct">—</div></div></div>
-              <div class="summary-row"><span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#c9962a;display:inline-block;margin-right:7px"></span>Cicilan</span><div style="text-align:right"><div class="sv" id="pie-cicil">—</div><div style="font-size:11px;color:var(--teks-muted)" id="pie-cicil-pct">—</div></div></div>
               <div class="summary-row" style="border-top:2px solid var(--abu-border);margin-top:8px;padding-top:10px"><span class="sk" style="font-weight:700;color:var(--teks)">Total WP</span><div class="sv" id="pie-total">—</div></div>
             </div>
           </div>
@@ -353,9 +350,9 @@
       </div>
       <div class="filter-bar">
         <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Cari nama, NOP, atau alamat..." oninput="applyFilters()" id="searchInput"></div>
-        <select class="filter-sel" onchange="applyFilters()" id="filterStatus"><option value="">Semua Status</option><option value="lunas">Lunas</option><option value="belum">Belum Bayar</option><option value="cicilan">Cicilan</option></select>
+        <select class="filter-sel" onchange="applyFilters()" id="filterStatus"><option value="">Semua Status</option><option value="lunas">Lunas</option><option value="belum">Belum Bayar</option></select>
         <select class="filter-sel" onchange="applyFilters()" id="filterRW"><option value="">Semua RW</option></select>
-        <select class="filter-sel" onchange="switchTahunData(this.value)" id="filterTahun"><option value="2024">Tahun 2024</option><option value="2023">Tahun 2023</option><option value="2022">Tahun 2022</option></select>
+        <select class="filter-sel" onchange="switchTahunData(this.value)" id="filterTahun"><option value="2024">Tahun 2024</option></select>
       </div>
       <div class="card">
         <div class="tbl-wrap"><table><thead><tr><th>#</th><th>NOP</th><th>Nama Wajib Pajak</th><th>RT/RW</th><th>Luas Tanah</th><th>Pokok Pajak</th><th>Tgl. Bayar</th><th>Status</th><th>Tahun</th><th>Aksi</th></tr></thead><tbody id="tableBody"><tr><td colspan="10"><div class="page-loading"><div class="spinner"></div><span>Memuat dari Supabase...</span></div></td></tr></tbody></table></div>
@@ -368,7 +365,7 @@
 
     <!-- ========== PEMBAYARAN ========== -->
     <div id="page-pembayaran" style="display:none">
-      <div class="section-head"><div><div class="section-title">Input Pembayaran SPPT</div><div class="section-sub">Rekam transaksi pembayaran pajak</div></div></div>
+      <div class="section-head"><div><div class="section-title">Input Pembayaran SPPT</div><div class="section-sub">Cari nama/NOP, pilih tanggal dan metode, lalu simpan sebagai lunas</div></div></div>
       <div class="grid-2">
         <div class="card">
           <div class="card-header"><div class="card-title">Transaksi Terbaru</div></div>
@@ -380,9 +377,8 @@
             <div class="form-row full"><div class="form-group"><label class="form-label">Cari NOP / Nama WP</label><input class="form-input" type="text" id="bayarSearch" placeholder="Ketik NOP atau nama..." oninput="searchWP(this.value)"></div></div>
             <div id="bayarResult"></div>
             <div class="form-row"><div class="form-group"><label class="form-label">NOP</label><input class="form-input" id="bayarNOP" readonly></div><div class="form-group"><label class="form-label">Nama WP</label><input class="form-input" id="bayarNama" readonly></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">Pokok Pajak</label><input class="form-input" id="bayarPokok" readonly></div><div class="form-group"><label class="form-label">Jumlah Dibayar (Rp)</label><input class="form-input" type="number" id="bayarJumlah"></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">Tanggal Bayar</label><input class="form-input" type="date" id="bayarTgl" value="2024-07-25"></div><div class="form-group"><label class="form-label">Metode</label><select class="form-input" id="bayarMetode"><option>Via Petugas</option><option>Transfer Bank</option><option>Bank BRI</option><option>BNI</option></select></div></div>
-            <div class="form-row full"><div class="form-group"><label class="form-label">Status</label><select class="form-input" id="bayarStatus"><option value="lunas">Lunas</option><option value="cicilan">Cicilan</option></select></div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Pokok Pajak</label><input class="form-input" id="bayarPokok" readonly></div><div class="form-group"><label class="form-label">Status Pembayaran</label><input class="form-input" value="Lunas" readonly></div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Tanggal Bayar</label><input class="form-input" type="date" id="bayarTgl"></div><div class="form-group"><label class="form-label">Metode</label><select class="form-input" id="bayarMetode"><option>Via Petugas</option><option>Transfer Bank</option><option>Bank BRI</option><option>BNI</option><option>Tunai di Kantor Desa</option></select></div></div>
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
               <button class="btn-sm" onclick="resetBayar()">Reset</button>
               <button class="btn-tambah" onclick="simpanPembayaran()"><i class="fas fa-save"></i> Simpan</button>
@@ -441,6 +437,32 @@
       </div>
     </div>
 
+
+    <!-- ========== PENGATURAN ========== -->
+    <div id="page-settings" style="display:none">
+      <div class="section-head"><div><div class="section-title">Pengaturan Aplikasi</div><div class="section-sub">Kontrol dashboard SPPT Desa Kasomalang Kulon</div></div></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Sinkronisasi Data</div></div>
+          <div class="card-body">
+            <div class="summary-row"><span class="sk">Tahun aktif</span><span class="sv" id="settings-tahun">2024</span></div>
+            <div class="summary-row"><span class="sk">Wilayah resmi</span><span class="sv">RW 001–007</span></div>
+            <div class="summary-row"><span class="sk">Data dimuat</span><span class="sv" id="settings-total">—</span></div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn-tambah" onclick="syncDatabase()"><i class="fas fa-sync"></i> Sinkronkan Ulang</button>
+              <button class="btn-sm" onclick="showPage('data')"><i class="fas fa-database"></i> Lihat Data</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Aturan Pembayaran</div></div>
+          <div class="card-body">
+            <div class="alert-item info" style="margin-bottom:10px"><i class="fas fa-info-circle alert-icon"></i><div class="alert-txt"><strong>Mode lunas penuh</strong><span>Pembayaran cukup pilih WP dari nama/NOP, tanggal bayar, dan metode. Sistem otomatis mencatat sebesar pokok pajak dan status lunas.</span></div></div>
+            <div class="alert-item warn"><i class="fas fa-map-marker-alt alert-icon"></i><div class="alert-txt"><strong>Batas wilayah</strong><span>Dashboard hanya menghitung RW 001 sampai RW 007 sesuai wilayah Desa Kasomalang Kulon.</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div><!-- /content -->
 </main>
 
@@ -457,7 +479,7 @@
       <div class="form-row"><div class="form-group"><label class="form-label">RT</label><input class="form-input" id="m-rt" type="text" placeholder="RT 001"></div><div class="form-group"><label class="form-label">RW</label><input class="form-input" id="m-rw" type="text" placeholder="001"></div></div>
       <div class="form-row full"><div class="form-group"><label class="form-label">Alamat</label><input class="form-input" id="m-alamat" type="text" placeholder="Kp. / Jl. ..."></div></div>
       <div class="form-row"><div class="form-group"><label class="form-label">Luas Tanah (m²)</label><input class="form-input" id="m-lt" type="number" placeholder="0"></div><div class="form-group"><label class="form-label">Luas Bangunan (m²)</label><input class="form-input" id="m-lb" type="number" placeholder="0"></div></div>
-      <div class="form-row"><div class="form-group"><label class="form-label">Pokok Pajak (Rp)</label><input class="form-input" id="m-pajak" type="number" placeholder="0"></div><div class="form-group"><label class="form-label">Status</label><select class="form-input" id="m-status"><option value="belum">Belum Bayar</option><option value="lunas">Lunas</option><option value="cicilan">Cicilan</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Pokok Pajak (Rp)</label><input class="form-input" id="m-pajak" type="number" placeholder="0"></div><div class="form-group"><label class="form-label">Status</label><select class="form-input" id="m-status"><option value="belum">Belum Bayar</option><option value="lunas">Lunas</option></select></div></div>
       <div class="form-row"><div class="form-group"><label class="form-label">Tanggal Bayar</label><input class="form-input" id="m-tglbayar" type="date"></div><div class="form-group"><label class="form-label">Metode</label><select class="form-input" id="m-metode"><option value="">—</option><option>Via Petugas</option><option>Transfer Bank</option><option>Bank BRI</option><option>BNI</option></select></div></div>
     </div>
     <div class="modal-footer">
@@ -481,7 +503,12 @@ let filteredData = [];
 let currentPage  = 1;
 const PER_PAGE   = 15;
 let activeTahun  = 2024;
+let currentPageName = 'dashboard';
 let chartBulanan, chartPie, chartRW;
+const OFFICIAL_RWS = ['001','002','003','004','005','006','007'];
+const normalizeRW = rw => String(rw || '').padStart(3, '0');
+const officialRows = rows => (rows || []).filter(d => OFFICIAL_RWS.includes(normalizeRW(d.rw)));
+const paymentAmount = d => d.status_bayar === 'lunas' ? Number(d.jumlah_dibayar || d.pokok_pajak || 0) : 0;
 
 // ─── Sync status UI ──────────────────────────────────────
 function setSyncStatus(state, msg) {
@@ -523,7 +550,7 @@ async function loadData(tahun = 2024) {
       from += pageSize;
     }
 
-    allData = rows;
+    allData = officialRows(rows);
     filteredData = [...allData];
     setSyncStatus('ok', `${allData.length} data · ${new Date().toLocaleTimeString('id-ID')}`);
 
@@ -546,9 +573,9 @@ async function renderDashboard() {
   const total  = data.length;
   const lunas  = data.filter(d => d.status_bayar === 'lunas').length;
   const belum  = data.filter(d => d.status_bayar === 'belum').length;
-  const cicil  = data.filter(d => d.status_bayar === 'cicilan').length;
+  const cicil  = 0;
   const target = data.reduce((s, d) => s + (d.pokok_pajak || 0), 0);
-  const terkumpul = data.reduce((s, d) => s + (d.jumlah_dibayar || 0), 0);
+  const terkumpul = data.reduce((s, d) => s + paymentAmount(d), 0);
   const denda = data.reduce((s, d) => s + (d.denda || 0), 0);
   const pct = target > 0 ? ((terkumpul / target) * 100).toFixed(1) : '0.0';
 
@@ -578,16 +605,14 @@ async function renderDashboard() {
   document.getElementById('pie-lunas-pct').textContent = total > 0 ? ((lunas/total)*100).toFixed(1)+'%' : '0%';
   document.getElementById('pie-belum').textContent = belum + ' WP';
   document.getElementById('pie-belum-pct').textContent = total > 0 ? ((belum/total)*100).toFixed(1)+'%' : '0%';
-  document.getElementById('pie-cicil').textContent = cicil + ' WP';
-  document.getElementById('pie-cicil-pct').textContent = total > 0 ? ((cicil/total)*100).toFixed(1)+'%' : '0%';
   document.getElementById('pie-total').textContent = total + ' Objek Pajak';
 
   // Rekap keuangan
-  const sisaCicil = data.filter(d => d.status_bayar === 'cicilan').reduce((s,d) => s + ((d.pokok_pajak||0) - (d.jumlah_dibayar||0)), 0);
+  const sisaCicil = 0;
   document.getElementById('rekapKeuangan').innerHTML = `
     <div class="summary-row"><span class="sk">Target Pokok PBB</span><span class="sv">${rupiah(target)}</span></div>
     <div class="summary-row"><span class="sk">Terkumpul s.d. Hari Ini</span><span class="sv" style="color:var(--hijau)">${rupiah(terkumpul)}</span></div>
-    <div class="summary-row"><span class="sk">Dalam Cicilan Aktif</span><span class="sv" style="color:var(--emas)">${rupiah(sisaCicil)}</span></div>
+    <div class="summary-row"><span class="sk">Cicilan</span><span class="sv" style="color:var(--teks-muted)">Tidak digunakan</span></div>
     <div class="summary-row"><span class="sk">Sisa Belum Terbayar</span><span class="sv" style="color:var(--merah)">${rupiah(target - terkumpul)}</span></div>
     <div class="summary-row"><span class="sk">Denda Keterlambatan</span><span class="sv" style="color:var(--merah)">${rupiah(denda)}</span></div>
     <div class="summary-row" style="border-top:2px solid var(--abu-border);margin-top:8px;padding-top:10px">
@@ -603,7 +628,7 @@ async function renderDashboard() {
     rwGroups[rw].total++;
     if (d.status_bayar === 'lunas' || d.status_bayar === 'cicilan') rwGroups[rw].lunas += (d.status_bayar === 'lunas' ? 1 : 0);
     rwGroups[rw].target += (d.pokok_pajak || 0);
-    rwGroups[rw].terkumpul += (d.jumlah_dibayar || 0);
+    rwGroups[rw].terkumpul += paymentAmount(d);
   });
 
   const rwColors = pct => pct >= 90 ? 'var(--hijau)' : pct >= 75 ? 'var(--emas)' : 'var(--merah)';
@@ -619,7 +644,7 @@ async function renderDashboard() {
 
   // Notifikasi
   const tunggakanBerat = data.filter(d => d.status_bayar === 'belum' && (d.tahun_tunggakan || 0) >= 2);
-  const jatuhTempo = data.filter(d => d.status_bayar === 'cicilan');
+  const jatuhTempo = [];
   let notifs = [];
   if (belum > 0) notifs.push(`<div class="alert-item danger"><i class="fas fa-exclamation-triangle alert-icon"></i><div class="alert-txt"><strong>WP Belum Bayar</strong><span>${belum} wajib pajak belum melakukan pembayaran tahun ${activeTahun}.</span></div></div>`);
   if (jatuhTempo.length > 0) notifs.push(`<div class="alert-item warn"><i class="fas fa-clock alert-icon"></i><div class="alert-txt"><strong>Cicilan Aktif</strong><span>${jatuhTempo.length} WP sedang dalam cicilan. Pantau pembayaran berikutnya.</span></div></div>`);
@@ -656,7 +681,7 @@ function initCharts(data, lunas, belum, cicil, rwGroups) {
       labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
       datasets: [
         { label: 'WP Lunas', data: monthly, backgroundColor: '#1a6b3c', borderRadius: 6, borderSkipped: false },
-        { label: 'WP Cicilan', data: monthlyCicil, backgroundColor: '#c9962a', borderRadius: 6, borderSkipped: false }
+
       ]
     },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{font:{size:11,family:'Plus Jakarta Sans'}}},y:{grid:{color:'#f0f0eb'},ticks:{font:{size:11},stepSize:5}}} }
@@ -665,7 +690,7 @@ function initCharts(data, lunas, belum, cicil, rwGroups) {
   if (chartPie) chartPie.destroy();
   chartPie = new Chart(document.getElementById('chartPie').getContext('2d'), {
     type: 'doughnut',
-    data: { labels:['Lunas','Belum Bayar','Cicilan'], datasets:[{data:[lunas,belum,cicil],backgroundColor:['#1a6b3c','#c0392b','#c9962a'],borderWidth:3,borderColor:'#fff',hoverOffset:6}] },
+    data: { labels:['Lunas','Belum Bayar'], datasets:[{data:[lunas,belum],backgroundColor:['#1a6b3c','#c0392b'],borderWidth:3,borderColor:'#fff',hoverOffset:6}] },
     options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} WP`}}} }
   });
 }
@@ -678,7 +703,7 @@ async function renderDataPage() {
   document.getElementById('data-sub').textContent = `Total ${allData.length} objek pajak terdaftar tahun ${activeTahun}`;
 
   // Populate RW filter
-  const rws = [...new Set(allData.map(d => d.rw).filter(Boolean))].sort();
+  const rws = OFFICIAL_RWS;
   const rwSel = document.getElementById('filterRW');
   rwSel.innerHTML = '<option value="">Semua RW</option>' + rws.map(r => `<option value="${r}">RW ${r}</option>`).join('');
 
@@ -790,10 +815,9 @@ async function renderRW() {
     if (!rwGroups[rw]) rwGroups[rw] = { total:0, lunas:0, cicil:0, belum:0, target:0, terkumpul:0 };
     rwGroups[rw].total++;
     if (d.status_bayar === 'lunas') rwGroups[rw].lunas++;
-    else if (d.status_bayar === 'cicilan') rwGroups[rw].cicil++;
     else rwGroups[rw].belum++;
     rwGroups[rw].target += (d.pokok_pajak || 0);
-    rwGroups[rw].terkumpul += (d.jumlah_dibayar || 0);
+    rwGroups[rw].terkumpul += paymentAmount(d);
   });
 
   const rwColor = p => p >= 90 ? 'var(--hijau)' : p >= 75 ? 'var(--emas)' : 'var(--merah)';
@@ -829,25 +853,25 @@ async function renderRW() {
 
 // ─── Laporan ─────────────────────────────────────────────
 async function renderLaporan() {
-  const { data } = await db.from('dashboard_summary').select('*').order('tahun_pajak', { ascending: false });
-  if (!data || data.length === 0) {
-    document.getElementById('laporanTahunan').innerHTML = '<div style="color:var(--teks-muted);padding:10px">Belum ada data multi-tahun di database.</div>';
-    return;
-  }
+  if (allData.length === 0) await loadData(activeTahun);
+  const total = allData.length;
+  const lunas = allData.filter(d => d.status_bayar === 'lunas').length;
+  const belum = allData.filter(d => d.status_bayar === 'belum').length;
+  const target = allData.reduce((s,d) => s + (d.pokok_pajak || 0), 0);
+  const terkumpul = allData.reduce((s,d) => s + paymentAmount(d), 0);
+  const pct = target > 0 ? ((terkumpul / target) * 100).toFixed(1) : '0.0';
   document.getElementById('laporanTahunan').innerHTML = `
     <table style="font-size:13px">
       <thead><tr><th>Tahun</th><th>Total WP</th><th>Lunas</th><th>Belum</th><th>Target</th><th>Terkumpul</th><th>%</th></tr></thead>
-      <tbody>${data.map(r => `
-        <tr>
-          <td><b>${r.tahun_pajak}</b></td>
-          <td>${r.total_wp}</td>
-          <td style="color:#15803d;font-weight:700">${r.total_lunas}</td>
-          <td style="color:var(--merah);font-weight:700">${r.total_belum}</td>
-          <td>${rupiahK(r.target_pajak)}</td>
-          <td>${rupiahK(r.terkumpul)}</td>
-          <td><b style="color:var(--hijau)">${r.persen_realisasi}%</b></td>
-        </tr>`).join('')}
-      </tbody>
+      <tbody><tr>
+        <td><b>${activeTahun}</b></td>
+        <td>${total}</td>
+        <td style="color:#15803d;font-weight:700">${lunas}</td>
+        <td style="color:var(--merah);font-weight:700">${belum}</td>
+        <td>${rupiahK(target)}</td>
+        <td>${rupiahK(terkumpul)}</td>
+        <td><b style="color:var(--hijau)">${pct}%</b></td>
+      </tr></tbody>
     </table>`;
 }
 
@@ -867,26 +891,27 @@ async function loadRecentTx() {
 
   document.getElementById('recentTx').innerHTML = data.map(tx => `
     <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--abu-border)">
-      <div style="width:10px;height:10px;border-radius:50%;background:${tx.tipe==='lunas'?'#16a34a':'var(--emas)'};flex-shrink:0;margin-top:4px"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#16a34a;flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1">
         <div style="font-weight:600;font-size:13px">${tx.sppt?.nama_wp || tx.nama_wp} — ${tx.sppt?.nop || tx.nop}</div>
         <div style="font-size:11px;color:var(--teks-muted)">${new Date(tx.tgl_bayar).toLocaleDateString('id-ID')} · ${tx.metode_bayar || 'Via Petugas'}</div>
       </div>
-      <div style="font-size:13px;font-weight:700;color:var(--hijau)">${rupiah(tx.jumlah)}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--hijau)">${rupiah(tx.jumlah)} · Lunas</div>
     </div>`).join('');
 }
 
 async function searchWP(val) {
   if (val.length < 2) { document.getElementById('bayarResult').innerHTML = ''; return; }
-  const { data } = await db.from('sppt').select('id, nop, nama_wp, pokok_pajak, status_bayar')
+  const { data } = await db.from('sppt').select('id, nop, nama_wp, pokok_pajak, status_bayar, rw')
     .eq('tahun_pajak', activeTahun)
     .or(`nama_wp.ilike.%${val}%,nop.ilike.%${val}%`)
-    .limit(5);
+    .limit(10);
 
-  if (!data || data.length === 0) { document.getElementById('bayarResult').innerHTML = ''; return; }
+  const results = officialRows(data || []).slice(0, 5);
+  if (!results.length) { document.getElementById('bayarResult').innerHTML = ''; return; }
   document.getElementById('bayarResult').innerHTML = `
     <div style="background:var(--abu);border-radius:10px;margin-bottom:12px;overflow:hidden;border:1px solid var(--abu-border)">
-      ${data.map(d => `<div onclick='selectWP(${JSON.stringify(d)})' style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--abu-border);transition:background .15s" onmouseover="this.style.background='var(--hijau-pale)'" onmouseout="this.style.background=''">
+      ${results.map(d => `<div onclick='selectWP(${JSON.stringify(d)})' style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--abu-border);transition:background .15s" onmouseover="this.style.background='var(--hijau-pale)'" onmouseout="this.style.background=''">
         <b>${d.nama_wp}</b> — <span style="font-family:monospace;font-size:12px">${d.nop}</span>
         <span class="badge ${d.status_bayar}" style="float:right">${d.status_bayar}</span>
       </div>`).join('')}
@@ -898,24 +923,26 @@ function selectWP(d) {
   document.getElementById('bayarNOP').value = d.nop;
   document.getElementById('bayarNama').value = d.nama_wp;
   document.getElementById('bayarPokok').value = rupiah(d.pokok_pajak);
-  document.getElementById('bayarJumlah').value = d.pokok_pajak;
   document.getElementById('bayarResult').innerHTML = '';
   document.getElementById('bayarSearch').value = '';
 }
 
 function resetBayar() {
   selectedSPPT = null;
-  ['bayarNOP','bayarNama','bayarPokok','bayarJumlah'].forEach(id => { document.getElementById(id).value = ''; });
+  ['bayarNOP','bayarNama','bayarPokok','bayarSearch'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('bayarResult').innerHTML = '';
+  document.getElementById('bayarTgl').value = new Date().toISOString().slice(0,10);
 }
 
 async function simpanPembayaran() {
   if (!selectedSPPT) { alert('Pilih WP terlebih dahulu'); return; }
-  const jumlah = Number(document.getElementById('bayarJumlah').value);
+  const jumlah = Number(selectedSPPT.pokok_pajak || 0);
   const tgl = document.getElementById('bayarTgl').value;
   const metode = document.getElementById('bayarMetode').value;
-  const status = document.getElementById('bayarStatus').value;
+  const status = 'lunas';
 
-  if (!jumlah || !tgl) { alert('Lengkapi jumlah dan tanggal bayar'); return; }
+  if (!tgl) { alert('Tanggal bayar wajib diisi'); return; }
+  if (!metode) { alert('Metode bayar wajib dipilih'); return; }
 
   // Upsert ke sppt
   const { error: e1 } = await db.from('sppt').update({
@@ -1009,19 +1036,23 @@ function exportTunggakan() {
 }
 
 // ─── Navigasi ────────────────────────────────────────────
-const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan'];
+const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan','settings'];
 const pageMeta = {
   dashboard:   ['Dashboard SPPT 2024','Desa Kasomalang Kulon'],
-  data:        ['Data SPPT','Desa Kasomalang Kulon'],
-  pembayaran:  ['Pembayaran SPPT','Input & riwayat transaksi'],
+  data:        ['Data SPPT','Desa Kasomalang Kulon · RW 001–007'],
+  pembayaran:  ['Pembayaran SPPT','Cari nama/NOP lalu simpan lunas'],
   laporan:     ['Laporan SPPT','Ringkasan dan ekspor laporan'],
-  rw:          ['Rekapitulasi Per RW','Desa Kasomalang Kulon'],
+  rw:          ['Rekapitulasi Per RW','Desa Kasomalang Kulon · RW 001–007'],
   tunggakan:   ['Daftar Tunggakan','WP belum bayar'],
+  settings:    ['Pengaturan','Sinkronisasi dan aturan aplikasi'],
 };
 
 async function showPage(name) {
+  currentPageName = name;
   pages.forEach(p => { document.getElementById('page-'+p).style.display = p === name ? 'block' : 'none'; });
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const activeNav = [...document.querySelectorAll('.nav-item')].find(el => (el.getAttribute('onclick') || '').includes(`'${name}'`));
+  if (activeNav) activeNav.classList.add('active');
   const meta = pageMeta[name];
   document.getElementById('page-title').textContent = meta[0];
   document.getElementById('page-sub').textContent = meta[1];
@@ -1032,21 +1063,38 @@ async function showPage(name) {
   if (name === 'laporan')   await renderLaporan();
   if (name === 'rw')        await renderRW();
   if (name === 'tunggakan') await renderTunggakan();
+  if (name === 'settings') renderSettings();
 }
 
-async function switchTahun() {
-  const years = [2024, 2023, 2022, 2021];
-  const cur = activeTahun;
-  activeTahun = years[(years.indexOf(cur)+1) % years.length];
-  document.getElementById('tahun-aktif').textContent = 'Tahun ' + activeTahun;
+async function switchTahun(val = 2024) {
+  activeTahun = parseInt(val || 2024, 10);
+  document.getElementById('tahunSelect').value = String(activeTahun);
+  const filterTahun = document.getElementById('filterTahun');
+  if (filterTahun) filterTahun.value = String(activeTahun);
   allData = [];
-  await renderDashboard();
+  await showPage(currentPageName || 'dashboard');
 }
 
 function switchTahunData(val) {
-  activeTahun = parseInt(val);
+  activeTahun = parseInt(val || 2024, 10);
+  document.getElementById('tahunSelect').value = String(activeTahun);
   allData = [];
   renderDataPage();
+}
+
+async function syncDatabase() {
+  const icon = document.getElementById('nav-sync-icon');
+  if (icon) icon.classList.add('fa-spin');
+  allData = [];
+  await loadData(activeTahun);
+  await showPage(currentPageName || 'dashboard');
+  if (icon) icon.classList.remove('fa-spin');
+}
+
+function renderSettings() {
+  const total = allData.length ? allData.length + ' data' : 'Belum dimuat';
+  document.getElementById('settings-tahun').textContent = activeTahun;
+  document.getElementById('settings-total').textContent = total;
 }
 
 // ─── Modal ────────────────────────────────────────────────
@@ -1062,6 +1110,8 @@ function showDetail(id) {
 
 // ─── Init ────────────────────────────────────────────────
 window.onload = async () => {
+  const bayarTgl = document.getElementById('bayarTgl');
+  if (bayarTgl) bayarTgl.value = new Date().toISOString().slice(0,10);
   await renderDashboard();
 };
 </script>
