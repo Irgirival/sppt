@@ -78,7 +78,8 @@
   .topbar { background: white; border-bottom: 1px solid var(--abu-border); padding: 0 28px; height: 64px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
   .topbar-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--hijau); flex: 1; }
   .topbar-sub { font-size: 12px; color: var(--teks-muted); }
-  .tahun-select { display: flex; align-items: center; gap: 8px; background: var(--abu); border: 1px solid var(--abu-border); border-radius: 10px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--hijau); cursor: pointer; }
+  .tahun-select { background: var(--abu); border: 1px solid var(--abu-border); border-radius: 10px; padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--hijau); cursor: pointer; outline: none; }
+  .toast { position: fixed; right: 22px; bottom: 22px; background: var(--teks); color: white; padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); z-index: 300; font-size: 13px; max-width: 360px; animation: fadeUp .2s ease; }
 
   /* ===== SYNC BADGE ===== */
   .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--teks-muted); padding: 5px 10px; background: var(--abu); border: 1px solid var(--abu-border); border-radius: 8px; }
@@ -446,6 +447,7 @@
           <div class="card-header"><div class="card-title">Sinkronisasi Data</div></div>
           <div class="card-body">
             <div class="summary-row"><span class="sk">Tahun aktif</span><span class="sv" id="settings-tahun">2024</span></div>
+            <div class="summary-row"><span class="sk">Tahun tersedia</span><span class="sv" id="settings-years">—</span></div>
             <div class="summary-row"><span class="sk">Wilayah resmi</span><span class="sv">RW 001–007</span></div>
             <div class="summary-row"><span class="sk">Data dimuat</span><span class="sv" id="settings-total">—</span></div>
             <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
@@ -503,6 +505,7 @@ let filteredData = [];
 let currentPage  = 1;
 const PER_PAGE   = 15;
 let activeTahun  = 2024;
+let availableYears = [2024];
 let currentPageName = 'dashboard';
 let chartBulanan, chartPie, chartRW;
 const OFFICIAL_RWS = ['001','002','003','004','005','006','007'];
@@ -526,6 +529,37 @@ const rupiahK = v => {
   if (v >= 1e3) return 'Rp ' + (v/1e3).toFixed(0) + ' Rb';
   return rupiah(v);
 };
+
+function showToast(msg) {
+  const old = document.getElementById('appToast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'appToast';
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+async function loadAvailableYears() {
+  const dynamic = new Set([activeTahun, new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1]);
+  try {
+    const { data, error } = await db.from('sppt').select('tahun_pajak');
+    if (!error && data) data.forEach(r => dynamic.add(Number(r.tahun_pajak)));
+  } catch(e) {
+    console.warn('Gagal memuat daftar tahun', e);
+  }
+  availableYears = [...dynamic].filter(Boolean).sort((a,b)=>b-a);
+  renderYearOptions();
+}
+
+function renderYearOptions() {
+  const html = availableYears.map(y => `<option value="${y}" ${y === activeTahun ? 'selected' : ''}>Tahun ${y}</option>`).join('');
+  const top = document.getElementById('tahunSelect');
+  const data = document.getElementById('filterTahun');
+  if (top) top.innerHTML = html;
+  if (data) data.innerHTML = html;
+}
 
 // ─── Load data from Supabase ─────────────────────────────
 async function loadData(tahun = 2024) {
@@ -571,6 +605,7 @@ async function loadData(tahun = 2024) {
 async function renderDashboard() {
   const data = await loadData(activeTahun);
   const total  = data.length;
+  renderYearOptions();
   const lunas  = data.filter(d => d.status_bayar === 'lunas').length;
   const belum  = data.filter(d => d.status_bayar === 'belum').length;
   const cicil  = 0;
@@ -799,7 +834,7 @@ async function renderTunggakan() {
           <td class="nominal">${rupiah(d.pokok_pajak)}</td>
           <td class="nominal" style="color:var(--merah)">${rupiah(denda + (d.denda||0))}</td>
           <td class="nominal" style="color:var(--merah)">${rupiah(total)}</td>
-          <td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td>
+          <td><button class="btn-sm" onclick="showDetail(${d.id})">Detail</button><button class="btn-sm danger" onclick="buatTagihan(${d.id})">Tagih</button></td>
         </tr>`;
       }).join('')
     : '<tr><td colspan="8" style="text-align:center;padding:30px;color:#16a34a"><i class="fas fa-check-circle"></i> Tidak ada tunggakan 🎉</td></tr>';
@@ -966,9 +1001,10 @@ async function simpanPembayaran() {
 
   if (e1 || e2) { alert('Gagal menyimpan: ' + (e1?.message || e2?.message)); return; }
 
-  alert('✅ Pembayaran berhasil disimpan!');
+  showToast('Pembayaran disimpan: status WP berubah menjadi lunas.');
   resetBayar();
   allData = []; // Reset cache
+  await loadData(activeTahun);
   await loadRecentTx();
 }
 
@@ -1038,7 +1074,7 @@ function exportTunggakan() {
 // ─── Navigasi ────────────────────────────────────────────
 const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan','settings'];
 const pageMeta = {
-  dashboard:   ['Dashboard SPPT 2024','Desa Kasomalang Kulon'],
+  dashboard:   [`Dashboard SPPT ${activeTahun}`,'Desa Kasomalang Kulon'],
   data:        ['Data SPPT','Desa Kasomalang Kulon · RW 001–007'],
   pembayaran:  ['Pembayaran SPPT','Cari nama/NOP lalu simpan lunas'],
   laporan:     ['Laporan SPPT','Ringkasan dan ekspor laporan'],
@@ -1054,7 +1090,7 @@ async function showPage(name) {
   const activeNav = [...document.querySelectorAll('.nav-item')].find(el => (el.getAttribute('onclick') || '').includes(`'${name}'`));
   if (activeNav) activeNav.classList.add('active');
   const meta = pageMeta[name];
-  document.getElementById('page-title').textContent = meta[0];
+  document.getElementById('page-title').textContent = name === 'dashboard' ? `Dashboard SPPT ${activeTahun}` : meta[0];
   document.getElementById('page-sub').textContent = meta[1];
 
   if (name === 'dashboard') await renderDashboard();
@@ -1066,18 +1102,16 @@ async function showPage(name) {
   if (name === 'settings') renderSettings();
 }
 
-async function switchTahun(val = 2024) {
-  activeTahun = parseInt(val || 2024, 10);
-  document.getElementById('tahunSelect').value = String(activeTahun);
-  const filterTahun = document.getElementById('filterTahun');
-  if (filterTahun) filterTahun.value = String(activeTahun);
+async function switchTahun(val = activeTahun) {
+  activeTahun = parseInt(val || activeTahun || 2024, 10);
+  renderYearOptions();
   allData = [];
   await showPage(currentPageName || 'dashboard');
 }
 
 function switchTahunData(val) {
-  activeTahun = parseInt(val || 2024, 10);
-  document.getElementById('tahunSelect').value = String(activeTahun);
+  activeTahun = parseInt(val || activeTahun || 2024, 10);
+  renderYearOptions();
   allData = [];
   renderDataPage();
 }
@@ -1094,6 +1128,7 @@ async function syncDatabase() {
 function renderSettings() {
   const total = allData.length ? allData.length + ' data' : 'Belum dimuat';
   document.getElementById('settings-tahun').textContent = activeTahun;
+  document.getElementById('settings-years').textContent = availableYears.map(y => 'Tahun ' + y).join(', ');
   document.getElementById('settings-total').textContent = total;
 }
 
@@ -1108,8 +1143,31 @@ function showDetail(id) {
   alert(`Detail WP:\n\nNOP: ${d.nop}\nNama: ${d.nama_wp}\nAlamat: ${d.alamat||'—'}\nRT/RW: RT ${d.rt||'?'} / RW ${d.rw||'?'}\nLuas Tanah: ${d.luas_tanah||'—'} m²\nPokok Pajak: ${rupiah(d.pokok_pajak)}\nStatus: ${d.status_bayar}\nTgl Bayar: ${d.tgl_bayar||'—'}`);
 }
 
+
+function buatTagihan(id) {
+  const d = allData.find(x => x.id === id);
+  if (!d) return;
+  const pesan = [
+    'TAGIHAN SPPT DESA KASOMALANG KULON',
+    `Tahun: ${d.tahun_pajak || activeTahun}`,
+    `NOP: ${d.nop || '-'}`,
+    `Nama WP: ${d.nama_wp || '-'}`,
+    `RW: ${d.rw || '-'}`,
+    `Pokok Pajak: ${rupiah(d.pokok_pajak)}`,
+    `Status: ${d.status_bayar === 'belum' ? 'Belum Bayar' : d.status_bayar}`,
+    '',
+    'Mohon segera melakukan pembayaran SPPT.'
+  ].join('\n');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(pesan).then(() => showToast('Template tagihan disalin ke clipboard.'));
+  } else {
+    prompt('Salin template tagihan:', pesan);
+  }
+}
+
 // ─── Init ────────────────────────────────────────────────
 window.onload = async () => {
+  await loadAvailableYears();
   const bayarTgl = document.getElementById('bayarTgl');
   if (bayarTgl) bayarTgl.value = new Date().toISOString().slice(0,10);
   await renderDashboard();
