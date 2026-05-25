@@ -504,16 +504,26 @@ const rupiahK = v => {
 async function loadData(tahun = 2024) {
   setSyncStatus('loading', 'Memuat data...');
   try {
-    const { data, error } = await db
-      .from('sppt')
-      .select('*')
-      .eq('tahun_pajak', tahun)
-      .order('rw', { ascending: true })
-      .order('nama_wp', { ascending: true });
+    const pageSize = 1000;
+    let from = 0;
+    let rows = [];
 
-    if (error) throw error;
+    while (true) {
+      const { data, error } = await db
+        .from('sppt')
+        .select('*')
+        .eq('tahun_pajak', tahun)
+        .order('rw', { ascending: true })
+        .order('nama_wp', { ascending: true })
+        .range(from, from + pageSize - 1);
 
-    allData = data || [];
+      if (error) throw error;
+      rows = rows.concat(data || []);
+      if (!data || data.length < pageSize) break;
+      from += pageSize;
+    }
+
+    allData = rows;
     filteredData = [...allData];
     setSyncStatus('ok', `${allData.length} data · ${new Date().toLocaleTimeString('id-ID')}`);
 
