@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard SPPT — Desa Kasomalang Kulon</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --hijau: #1a6b3c;
+    --hijau-muda: #2d9e5f;
+    --hijau-pale: #e8f5ee;
+    --hijau-mid: #c3e8d4;
+    --emas: #c9962a;
+    --emas-pale: #fdf3dc;
+    --merah: #c0392b;
+    --merah-pale: #fdecea;
+    --abu: #f4f5f0;
+    --abu-border: #e0e3d8;
+    --teks: #1c2418;
+    --teks-muted: #6b7566;
+    --putih: #ffffff;
+    --sidebar-w: 260px;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(26,107,60,0.08);
+    --shadow-card: 0 4px 24px rgba(26,107,60,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--abu);
+    color: var(--teks);
+    display: flex;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--hijau);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .logo-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--emas);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .logo-text { color: white; }
+  .logo-text .desa { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+  .logo-text .nama { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+  .logo-text .sub { font-size: 10px; opacity: 0.6; margin-top: 1px; }
+
+  .nav-section { padding: 16px 12px 8px; }
+  .nav-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; padding: 0 8px; margin-bottom: 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: rgba(255,255,255,0.65);
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    user-select: none;
+  }
+  .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+  .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.18); color: white; }
+  .nav-item .badge-nav {
+    margin-left: auto;
+    background: var(--emas);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-footer .user-info {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    background: var(--emas);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: white;
+    flex-shrink: 0;
+  }
+  .user-detail { flex: 1; min-width: 0; }
+  .user-name { color: white; font-size: 13px; font-weight: 600; }
+  .user-role { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+  /* ===== MAIN ===== */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ===== TOPBAR ===== */
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--abu-border);
+    padding: 0 28px;
+    height: 64px;
+    display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .topbar-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--hijau); flex: 1; }
+  .topbar-sub { font-size: 12px; color: var(--teks-muted); }
+
+  .tahun-select {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--abu);
+    border: 1px solid var(--abu-border);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hijau);
+    cursor: pointer;
+  }
+
+  .btn-export {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--hijau);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    font-family: inherit;
+  }
+  .btn-export:hover { background: var(--hijau-muda); }
+
+  .btn-tambah {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--emas);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    font-family: inherit;
+  }
+  .btn-tambah:hover { background: #b8851f; }
+
+  /* ===== CONTENT ===== */
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* ===== STAT CARDS ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1px solid var(--abu-border);
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    cursor: default;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.hijau::before { background: var(--hijau); }
+  .stat-card.emas::before { background: var(--emas); }
+  .stat-card.merah::before { background: var(--merah); }
+  .stat-card.biru::before { background: #2563eb; }
+
+  .stat-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .stat-icon.hijau { background: var(--hijau-pale); color: var(--hijau); }
+  .stat-icon.emas { background: var(--emas-pale); color: var(--emas); }
+  .stat-icon.merah { background: var(--merah-pale); color: var(--merah); }
+  .stat-icon.biru { background: #eff6ff; color: #2563eb; }
+
+  .stat-label { font-size: 12px; color: var(--teks-muted); font-weight: 500; margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 800; color: var(--teks); line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--teks-muted); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+  .stat-sub .up { color: #16a34a; }
+  .stat-sub .down { color: var(--merah); }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-section {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    border: 1px solid var(--abu-border);
+    margin-bottom: 24px;
+  }
+  .progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .progress-title { font-size: 14px; font-weight: 700; }
+  .progress-pct { font-size: 22px; font-weight: 800; color: var(--hijau); }
+
+  .pbar-wrap { background: var(--abu); border-radius: 100px; height: 18px; overflow: hidden; position: relative; }
+  .pbar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--hijau) 0%, var(--hijau-muda) 100%);
+    border-radius: 100px;
+    transition: width 1s ease;
+    display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+  }
+  .pbar-label { font-size: 10px; color: white; font-weight: 700; }
+
+  .rw-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 16px; }
+  .rw-card {
+    background: var(--abu);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--abu-border);
+    text-align: center;
+    transition: all .2s;
+    cursor: default;
+  }
+  .rw-card:hover { background: var(--hijau-pale); border-color: var(--hijau-mid); }
+  .rw-name { font-size: 11px; font-weight: 700; color: var(--teks); margin-bottom: 4px; }
+  .rw-pct { font-size: 18px; font-weight: 800; color: var(--hijau); }
+  .rw-detail { font-size: 10px; color: var(--teks-muted); margin-top: 2px; }
+  .rw-mini-bar { height: 4px; background: var(--abu-border); border-radius: 100px; margin-top: 8px; overflow: hidden; }
+  .rw-mini-fill { height: 100%; background: var(--hijau); border-radius: 100px; }
+
+  /* ===== GRID 2COL ===== */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--abu-border);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--abu-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-sub { font-size: 11px; color: var(--teks-muted); margin-top: 2px; }
+  .card-body { padding: 16px 20px; }
+
+  /* ===== FILTER & SEARCH ===== */
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1; min-width: 200px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--abu);
+    border: 1px solid var(--abu-border);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  .search-box i { color: var(--teks-muted); font-size: 14px; }
+  .search-box input {
+    border: none; background: none; outline: none;
+    font-family: inherit; font-size: 13px; color: var(--teks);
+    flex: 1;
+  }
+  .search-box input::placeholder { color: var(--teks-muted); }
+
+  select.filter-sel {
+    background: var(--abu);
+    border: 1px solid var(--abu-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-family: inherit; font-size: 13px; color: var(--teks);
+    outline: none; cursor: pointer;
+  }
+
+  /* ===== TABLE ===== */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--abu);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--teks-muted);
+    border-bottom: 1px solid var(--abu-border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--hijau); }
+  tbody tr { border-bottom: 1px solid var(--abu-border); transition: background .15s; }
+  tbody tr:hover { background: var(--abu); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 11px 14px; vertical-align: middle; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge.lunas { background: #dcfce7; color: #15803d; }
+  .badge.belum { background: #fee2e2; color: #b91c1c; }
+  .badge.cicil { background: #fef9c3; color: #854d0e; }
+  .badge dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .btn-sm {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--abu-border);
+    background: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--teks);
+    transition: all .2s;
+    margin-right: 4px;
+  }
+  .btn-sm:hover { background: var(--hijau); color: white; border-color: var(--hijau); }
+  .btn-sm.danger:hover { background: var(--merah); color: white; border-color: var(--merah); }
+
+  .nominal { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .nip { font-size: 11px; color: var(--teks-muted); margin-top: 1px; }
+
+  /* ===== PAGINATION ===== */
+  .pagination {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--abu-border);
+    font-size: 12px;
+  }
+  .pag-info { color: var(--teks-muted); }
+  .pag-btns { display: flex; gap: 4px; }
+  .pag-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--abu-border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    background: white;
+    transition: all .2s;
+    color: var(--teks);
+  }
+  .pag-btn:hover, .pag-btn.active { background: var(--hijau); color: white; border-color: var(--hijau); }
+
+  /* ===== CHART AREA ===== */
+  .chart-wrap { position: relative; padding: 16px 20px; }
+
+  /* ===== NOTIF/ALERT ===== */
+  .alert-list { padding: 12px 20px; }
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+  }
+  .alert-item:last-child { margin-bottom: 0; }
+  .alert-item.warn { background: #fffbeb; border: 1px solid #fde68a; }
+  .alert-item.info { background: #eff6ff; border: 1px solid #bfdbfe; }
+  .alert-item.danger { background: var(--merah-pale); border: 1px solid #fca5a5; }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-item.warn .alert-icon { color: #d97706; }
+  .alert-item.info .alert-icon { color: #2563eb; }
+  .alert-item.danger .alert-icon { color: var(--merah); }
+  .alert-txt strong { display: block; font-weight: 700; margin-bottom: 1px; }
+  .alert-txt span { color: var(--teks-muted); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 18px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalIn .25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+    to { opacity: 1; transform: none; }
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--abu-border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--abu-border);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--teks-muted);
+    transition: all .2s;
+  }
+  .modal-close:hover { background: var(--abu); color: var(--teks); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--abu-border);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* FORM */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--teks-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .form-input {
+    padding: 10px 14px;
+    border: 1.5px solid var(--abu-border);
+    border-radius: 10px;
+    font-family: inherit; font-size: 13.5px; color: var(--teks);
+    outline: none;
+    transition: border-color .2s;
+    background: white;
+  }
+  .form-input:focus { border-color: var(--hijau); }
+  .form-input.select { cursor: pointer; }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title { font-size: 16px; font-weight: 800; color: var(--teks); }
+  .section-sub { font-size: 12px; color: var(--teks-muted); margin-top: 1px; }
+
+  /* ===== TABS ===== */
+  .tabs { display: flex; gap: 4px; padding: 4px; background: var(--abu); border-radius: 10px; margin-bottom: 16px; }
+  .tab {
+    flex: 1; padding: 7px 12px;
+    border-radius: 8px; border: none;
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; background: none; color: var(--teks-muted);
+    transition: all .2s;
+  }
+  .tab.active { background: white; color: var(--hijau); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+  /* ===== RIWAYAT ===== */
+  .timeline { padding: 4px 0; }
+  .tl-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--abu-border); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .tl-dot.lunas { background: #16a34a; }
+  .tl-dot.cicil { background: var(--emas); }
+  .tl-dot.jatuh { background: var(--merah); }
+  .tl-info { flex: 1; }
+  .tl-title { font-size: 13px; font-weight: 600; }
+  .tl-meta { font-size: 11px; color: var(--teks-muted); margin-top: 2px; }
+  .tl-amount { font-size: 13px; font-weight: 700; color: var(--hijau); text-align: right; }
+
+  /* ===== SUMMARY CARD ===== */
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--abu-border); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .sk { font-size: 12.5px; color: var(--teks-muted); }
+  .summary-row .sv { font-size: 13px; font-weight: 700; }
+
+  /* ===== ANIMASI MASUK ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+  .anim { animation: fadeUp .4s ease forwards; opacity: 0; }
+  .anim:nth-child(1) { animation-delay: .05s; }
+  .anim:nth-child(2) { animation-delay: .1s; }
+  .anim:nth-child(3) { animation-delay: .15s; }
+  .anim:nth-child(4) { animation-delay: .2s; }
+
+  /* ===== PRINT ===== */
+  @media print {
+    .sidebar, .topbar, .filter-bar, .btn-export, .btn-tambah, .btn-sm, .pagination { display: none !important; }
+    .main { margin-left: 0 !important; }
+    .content { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================== SIDEBAR ============================== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon"><i class="fas fa-landmark"></i></div>
+      <div class="logo-text">
+        <div class="desa">Pemerintah Desa</div>
+        <div class="nama">Kasomalang Kulon</div>
+        <div class="sub">Kec. Kasomalang — Subang</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Menu Utama</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <i class="fas fa-chart-pie"></i> Dashboard Utama
+    </div>
+    <div class="nav-item" onclick="showPage('data')">
+      <i class="fas fa-database"></i> Data SPPT
+      <span class="badge-nav">247</span>
+    </div>
+    <div class="nav-item" onclick="showPage('pembayaran')">
+      <i class="fas fa-money-bill-wave"></i> Pembayaran
+    </div>
+    <div class="nav-item" onclick="showPage('laporan')">
+      <i class="fas fa-file-chart-line"></i> Laporan
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Wilayah</div>
+    <div class="nav-item" onclick="showPage('rw')">
+      <i class="fas fa-map-marked-alt"></i> Rekapitulasi per RW
+    </div>
+    <div class="nav-item" onclick="showPage('tunggakan')">
+      <i class="fas fa-exclamation-circle"></i> Tunggakan
+      <span class="badge-nav" style="background:#c0392b">31</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Pengaturan</div>
+    <div class="nav-item"><i class="fas fa-cog"></i> Pengaturan</div>
+    <div class="nav-item"><i class="fas fa-question-circle"></i> Bantuan</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="avatar">RK</div>
+      <div class="user-detail">
+        <div class="user-name">Rahman Kusuma</div>
+        <div class="user-role">Admin Pajak Desa</div>
+      </div>
+      <i class="fas fa-ellipsis-v" style="color:rgba(255,255,255,.4);cursor:pointer;font-size:14px;"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================== MAIN ============================== -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="flex:1">
+      <div class="topbar-title" id="page-title">Dashboard SPPT 2024</div>
+      <div class="topbar-sub" id="page-sub">Desa Kasomalang Kulon — Data per 25 Mei 2025</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="tahun-select" onclick="toggleTahun(this)">
+        <i class="fas fa-calendar-alt" style="font-size:13px"></i>
+        <span id="tahun-aktif">Tahun 2024</span>
+        <i class="fas fa-chevron-down" style="font-size:10px"></i>
+      </div>
+      <button class="btn-export" onclick="window.print()">
+        <i class="fas fa-download"></i> Export
+      </button>
+      <button class="btn-tambah" onclick="openModal()">
+        <i class="fas fa-plus"></i> Tambah Data
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="main-content">
+
+    <!-- ========== PAGE: DASHBOARD ========== -->
+    <div id="page-dashboard">
+
+      <!-- STAT CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card hijau anim">
+          <div class="stat-icon hijau"><i class="fas fa-file-invoice-dollar"></i></div>
+          <div class="stat-label">Total Wajib Pajak</div>
+          <div class="stat-value">247</div>
+          <div class="stat-sub"><span class="up"><i class="fas fa-arrow-up"></i> 12</span> dari tahun lalu</div>
+        </div>
+        <div class="stat-card emas anim">
+          <div class="stat-icon emas"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-label">Sudah Lunas</div>
+          <div class="stat-value">216</div>
+          <div class="stat-sub"><span class="up">87.4%</span> dari total WP</div>
+        </div>
+        <div class="stat-card merah anim">
+          <div class="stat-icon merah"><i class="fas fa-times-circle"></i></div>
+          <div class="stat-label">Belum Bayar</div>
+          <div class="stat-value">31</div>
+          <div class="stat-sub"><span class="down"><i class="fas fa-arrow-down"></i> 8</span> dari bulan lalu</div>
+        </div>
+        <div class="stat-card biru anim">
+          <div class="stat-icon biru"><i class="fas fa-coins"></i></div>
+          <div class="stat-label">Pokok Pajak Terkumpul</div>
+          <div class="stat-value" style="font-size:19px">Rp 18,4 Jt</div>
+          <div class="stat-sub"><span class="up">dari Rp 21,1 Jt target</span></div>
+        </div>
+      </div>
+
+      <!-- PROGRESS REALISASI -->
+      <div class="progress-section anim">
+        <div class="progress-header">
+          <div>
+            <div class="progress-title">Realisasi Pembayaran SPPT 2024</div>
+            <div class="card-sub" style="margin-top:3px">Total Target: Rp 21.140.000 &nbsp;|&nbsp; Terkumpul: Rp 18.460.000 &nbsp;|&nbsp; Sisa: Rp 2.680.000</div>
+          </div>
+          <div class="progress-pct">87.4%</div>
+        </div>
+        <div class="pbar-wrap">
+          <div class="pbar-fill" style="width:87.4%">
+            <span class="pbar-label">87.4%</span>
+          </div>
+        </div>
+        <div class="rw-list">
+          <div class="rw-card">
+            <div class="rw-name">RW 001</div>
+            <div class="rw-pct">94%</div>
+            <div class="rw-detail">47/50 WP Lunas</div>
+            <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:94%"></div></div>
+          </div>
+          <div class="rw-card">
+            <div class="rw-name">RW 002</div>
+            <div class="rw-pct">88%</div>
+            <div class="rw-detail">44/50 WP Lunas</div>
+            <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:88%"></div></div>
+          </div>
+          <div class="rw-card">
+            <div class="rw-name">RW 003</div>
+            <div class="rw-pct">82%</div>
+            <div class="rw-detail">37/45 WP Lunas</div>
+            <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:82%"></div></div>
+          </div>
+          <div class="rw-card">
+            <div class="rw-name">RW 004</div>
+            <div class="rw-pct">91%</div>
+            <div class="rw-detail">51/56 WP Lunas</div>
+            <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:91%"></div></div>
+          </div>
+          <div class="rw-card">
+            <div class="rw-name">RW 005</div>
+            <div class="rw-pct">79%</div>
+            <div class="rw-detail">37/47 WP Lunas</div>
+            <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:79%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART + NOTIF -->
+      <div class="grid-3">
+        <!-- Grafik Bulanan -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Tren Pembayaran Bulanan 2024</div>
+              <div class="card-sub">Jumlah WP yang membayar per bulan</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div style="position:relative;height:260px;">
+              <canvas id="chartBulanan" role="img" aria-label="Grafik pembayaran bulanan SPPT 2024">Data pembayaran SPPT per bulan 2024</canvas>
+            </div>
+          </div>
+        </div>
+        <!-- Notifikasi -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Notifikasi & Peringatan</div>
+              <div class="card-sub">Perlu tindak lanjut segera</div>
+            </div>
+            <span style="background:var(--merah-pale);color:var(--merah);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">3 Baru</span>
+          </div>
+          <div class="alert-list">
+            <div class="alert-item danger">
+              <i class="fas fa-exclamation-triangle alert-icon"></i>
+              <div class="alert-txt"><strong>Batas Akhir Pembayaran!</strong><span>31 Agustus 2024 — 31 WP belum bayar. Kirim tagihan segera.</span></div>
+            </div>
+            <div class="alert-item warn">
+              <i class="fas fa-clock alert-icon"></i>
+              <div class="alert-txt"><strong>Jatuh Tempo Cicilan</strong><span>Suhendi (RW 003) cicilan ke-2 jatuh tempo 30 Juli 2024.</span></div>
+            </div>
+            <div class="alert-item warn">
+              <i class="fas fa-user-clock alert-icon"></i>
+              <div class="alert-txt"><strong>Tunggakan 2 Tahun</strong><span>Mamad Saefudin belum bayar sejak 2022. Total Rp 480.000.</span></div>
+            </div>
+            <div class="alert-item info">
+              <i class="fas fa-info-circle alert-icon"></i>
+              <div class="alert-txt"><strong>Data Baru Masuk</strong><span>12 SPPT baru diterbitkan KPP untuk Desa Kasomalang Kulon.</span></div>
+            </div>
+            <div class="alert-item info">
+              <i class="fas fa-check-circle alert-icon"></i>
+              <div class="alert-txt"><strong>Setoran Berhasil</strong><span>Setoran Rp 1.240.000 ke Kas Desa — 22 Jul 2024 — Berhasil.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie + Rekap -->
+      <div class="grid-2" style="margin-bottom:0">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Komposisi Status Pembayaran</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px;padding:20px;">
+            <div style="position:relative;height:200px;width:200px;flex-shrink:0">
+              <canvas id="chartPie" role="img" aria-label="Pie chart status pembayaran">Lunas 216, Belum 31</canvas>
+            </div>
+            <div style="flex:1">
+              <div class="summary-row">
+                <span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#1a6b3c;display:inline-block;margin-right:7px;"></span>Lunas</span>
+                <div style="text-align:right"><div class="sv">216 WP</div><div style="font-size:11px;color:var(--teks-muted)">87.4%</div></div>
+              </div>
+              <div class="summary-row">
+                <span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#c0392b;display:inline-block;margin-right:7px;"></span>Belum Bayar</span>
+                <div style="text-align:right"><div class="sv">31 WP</div><div style="font-size:11px;color:var(--teks-muted)">12.6%</div></div>
+              </div>
+              <div class="summary-row">
+                <span class="sk"><span style="width:10px;height:10px;border-radius:2px;background:#c9962a;display:inline-block;margin-right:7px;"></span>Cicilan Aktif</span>
+                <div style="text-align:right"><div class="sv">8 WP</div><div style="font-size:11px;color:var(--teks-muted)">3.2%</div></div>
+              </div>
+              <div class="summary-row" style="border-top:2px solid var(--abu-border);margin-top:8px;padding-top:10px">
+                <span class="sk" style="font-weight:700;color:var(--teks)">Total WP</span>
+                <div class="sv">247 Objek Pajak</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Rekapitulasi Keuangan 2024</div>
+          </div>
+          <div class="card-body">
+            <div class="summary-row">
+              <span class="sk">Target Pokok PBB</span>
+              <span class="sv">Rp 21.140.000</span>
+            </div>
+            <div class="summary-row">
+              <span class="sk">Terkumpul s.d. Hari Ini</span>
+              <span class="sv" style="color:var(--hijau)">Rp 18.460.000</span>
+            </div>
+            <div class="summary-row">
+              <span class="sk">Dalam Cicilan Aktif</span>
+              <span class="sv" style="color:var(--emas)">Rp 1.240.000</span>
+            </div>
+            <div class="summary-row">
+              <span class="sk">Sisa Belum Terbayar</span>
+              <span class="sv" style="color:var(--merah)">Rp 2.680.000</span>
+            </div>
+            <div class="summary-row">
+              <span class="sk">Denda Keterlambatan</span>
+              <span class="sv" style="color:var(--merah)">Rp 134.000</span>
+            </div>
+            <div class="summary-row" style="border-top:2px solid var(--abu-border);margin-top:8px;padding-top:10px">
+              <span class="sk" style="font-weight:700;color:var(--teks)">Sudah Disetor ke Kas</span>
+              <span class="sv" style="font-size:15px;color:var(--hijau)">Rp 16.200.000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-dashboard -->
+
+
+    <!-- ========== PAGE: DATA SPPT ========== -->
+    <div id="page-data" style="display:none">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Data SPPT Desa Kasomalang Kulon 2024</div>
+          <div class="section-sub">Total 247 objek pajak terdaftar</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Cari nama, NOP, atau alamat..." onkeyup="filterTable(this.value)" id="searchInput">
+        </div>
+        <select class="filter-sel" onchange="filterStatus(this.value)" id="filterStatus">
+          <option value="">Semua Status</option>
+          <option value="lunas">Lunas</option>
+          <option value="belum">Belum Bayar</option>
+          <option value="cicil">Cicilan</option>
+        </select>
+        <select class="filter-sel" onchange="filterRW(this.value)">
+          <option value="">Semua RW</option>
+          <option value="001">RW 001</option>
+          <option value="002">RW 002</option>
+          <option value="003">RW 003</option>
+          <option value="004">RW 004</option>
+          <option value="005">RW 005</option>
+        </select>
+        <select class="filter-sel">
+          <option>Tahun 2024</option>
+          <option>Tahun 2023</option>
+          <option>Tahun 2022</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="tbl-wrap">
+          <table id="mainTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable(0)">No <i class="fas fa-sort" style="font-size:9px"></i></th>
+                <th onclick="sortTable(1)">NOP / Nomor Objek</th>
+                <th onclick="sortTable(2)">Nama Wajib Pajak</th>
+                <th>Alamat / RT/RW</th>
+                <th>Luas Tanah (m²)</th>
+                <th onclick="sortTable(5)">Pokok Pajak</th>
+                <th>Tgl. Bayar</th>
+                <th onclick="sortTable(7)">Status</th>
+                <th>Tahun Bayar</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="pag-info" id="pagInfo">Menampilkan 1–15 dari 247 data</div>
+          <div class="pag-btns">
+            <div class="pag-btn" onclick="changePage(-1)"><i class="fas fa-chevron-left" style="font-size:11px"></i></div>
+            <div class="pag-btn active" id="pag1" onclick="goPage(1)">1</div>
+            <div class="pag-btn" id="pag2" onclick="goPage(2)">2</div>
+            <div class="pag-btn" id="pag3" onclick="goPage(3)">3</div>
+            <div class="pag-btn">...</div>
+            <div class="pag-btn" onclick="goPage(17)">17</div>
+            <div class="pag-btn" onclick="changePage(1)"><i class="fas fa-chevron-right" style="font-size:11px"></i></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-data -->
+
+
+    <!-- ========== PAGE: PEMBAYARAN ========== -->
+    <div id="page-pembayaran" style="display:none">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Riwayat Pembayaran SPPT</div>
+          <div class="section-sub">Semua transaksi pembayaran pajak 2024</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Transaksi Terakhir</div></div>
+          <div class="card-body" style="padding:0">
+            <div class="timeline" style="padding:0 20px">
+              <div class="tl-item"><div class="tl-dot lunas"></div><div class="tl-info"><div class="tl-title">Wawan Kusuma — NOP 320616.001.002</div><div class="tl-meta">25 Jul 2024 · RW 001 · Via Petugas</div></div><div class="tl-amount">Rp 42.000</div></div>
+              <div class="tl-item"><div class="tl-dot lunas"></div><div class="tl-info"><div class="tl-title">Ibu Sari Dewi — NOP 320616.002.015</div><div class="tl-meta">24 Jul 2024 · RW 002 · Via Transfer</div></div><div class="tl-amount">Rp 78.000</div></div>
+              <div class="tl-item"><div class="tl-dot cicil"></div><div class="tl-info"><div class="tl-title">Suhendi — NOP 320616.003.008 (Cicil 1/2)</div><div class="tl-meta">22 Jul 2024 · RW 003 · Via Petugas</div></div><div class="tl-amount">Rp 55.000</div></div>
+              <div class="tl-item"><div class="tl-dot lunas"></div><div class="tl-info"><div class="tl-title">Ahmad Fauzi — NOP 320616.001.031</div><div class="tl-meta">20 Jul 2024 · RW 001 · Via Bank BRI</div></div><div class="tl-amount">Rp 125.000</div></div>
+              <div class="tl-item"><div class="tl-dot lunas"></div><div class="tl-info"><div class="tl-title">Hj. Enah — NOP 320616.004.007</div><div class="tl-meta">18 Jul 2024 · RW 004 · Via Petugas</div></div><div class="tl-amount">Rp 38.000</div></div>
+              <div class="tl-item"><div class="tl-dot jatuh"></div><div class="tl-info"><div class="tl-title">Karsin — Tagihan Dikirim</div><div class="tl-meta">15 Jul 2024 · RW 005 · Belum ada respon</div></div><div class="tl-amount" style="color:var(--merah)">Rp 67.000</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Input Pembayaran Baru</div></div>
+          <div class="card-body">
+            <div class="form-row full"><div class="form-group"><label class="form-label">Cari Nama / NOP</label><input class="form-input" type="text" placeholder="Ketik nama atau nomor objek pajak..."></div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">NOP</label><input class="form-input" type="text" placeholder="320616.XXX.XXX" readonly value="320616.003.012"></div><div class="form-group"><label class="form-label">Nama WP</label><input class="form-input" type="text" placeholder="-" value="Dadang Suryana"></div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Pokok Pajak</label><input class="form-input" type="text" placeholder="-" value="Rp 85.000" readonly></div><div class="form-group"><label class="form-label">Jumlah Dibayar</label><input class="form-input" type="text" placeholder="Rp 0"></div></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Tanggal Bayar</label><input class="form-input" type="date" value="2024-07-25"></div><div class="form-group"><label class="form-label">Metode Bayar</label><select class="form-input select"><option>Via Petugas</option><option>Transfer Bank</option><option>Bank BRI</option><option>BNI</option></select></div></div>
+            <div class="form-row full"><div class="form-group"><label class="form-label">Status Pembayaran</label><select class="form-input select"><option>Lunas</option><option>Cicilan</option></select></div></div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
+              <button class="btn-sm" style="padding:9px 18px">Reset</button>
+              <button class="btn-tambah" style="padding:9px 20px;font-size:13px"><i class="fas fa-save"></i> Simpan Pembayaran</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-pembayaran -->
+
+
+    <!-- ========== PAGE: LAPORAN ========== -->
+    <div id="page-laporan" style="display:none">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Laporan SPPT Desa Kasomalang Kulon</div>
+          <div class="section-sub">Ringkasan dan ekspor data laporan pajak</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Laporan Per Tahun</div></div>
+          <div class="card-body">
+            <table style="font-size:13px">
+              <thead><tr><th>Tahun</th><th>Total WP</th><th>Lunas</th><th>Belum</th><th>Realisasi</th><th>%</th></tr></thead>
+              <tbody>
+                <tr><td><b>2024</b></td><td>247</td><td style="color:#15803d;font-weight:700">216</td><td style="color:var(--merah);font-weight:700">31</td><td>Rp 18,46 Jt</td><td><b style="color:var(--hijau)">87.4%</b></td></tr>
+                <tr><td>2023</td><td>235</td><td>221</td><td>14</td><td>Rp 17,82 Jt</td><td>94.0%</td></tr>
+                <tr><td>2022</td><td>230</td><td>208</td><td>22</td><td>Rp 16,40 Jt</td><td>90.4%</td></tr>
+                <tr><td>2021</td><td>225</td><td>198</td><td>27</td><td>Rp 15,10 Jt</td><td>88.0%</td></tr>
+                <tr><td>2020</td><td>220</td><td>185</td><td>35</td><td>Rp 13,90 Jt</td><td>84.1%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Ekspor Laporan</div></div>
+          <div class="card-body">
+            <div style="display:grid;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--abu);border-radius:10px;border:1px solid var(--abu-border)">
+                <div><div style="font-weight:700;font-size:13px"><i class="fas fa-file-excel" style="color:#15803d;margin-right:7px"></i>Excel — Rekap Semua WP</div><div style="font-size:11px;color:var(--teks-muted);margin-top:2px">247 baris · Update 25 Jul 2024</div></div>
+                <button class="btn-sm"><i class="fas fa-download"></i> Unduh</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--abu);border-radius:10px;border:1px solid var(--abu-border)">
+                <div><div style="font-weight:700;font-size:13px"><i class="fas fa-file-pdf" style="color:var(--merah);margin-right:7px"></i>PDF — Laporan Bulanan Juli 2024</div><div style="font-size:11px;color:var(--teks-muted);margin-top:2px">Siap cetak · Format resmi desa</div></div>
+                <button class="btn-sm"><i class="fas fa-download"></i> Unduh</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--abu);border-radius:10px;border:1px solid var(--abu-border)">
+                <div><div style="font-weight:700;font-size:13px"><i class="fas fa-file-alt" style="color:#2563eb;margin-right:7px"></i>Daftar Tunggakan 2024</div><div style="font-size:11px;color:var(--teks-muted);margin-top:2px">31 WP belum bayar</div></div>
+                <button class="btn-sm"><i class="fas fa-download"></i> Unduh</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-laporan -->
+
+
+    <!-- ========== PAGE: TUNGGAKAN ========== -->
+    <div id="page-tunggakan" style="display:none">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Daftar Tunggakan SPPT 2024</div>
+          <div class="section-sub">31 wajib pajak belum melakukan pembayaran</div>
+        </div>
+        <button class="btn-export"><i class="fas fa-paper-plane"></i> Kirim Tagihan Massal</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th><th>NOP</th><th>Nama WP</th><th>RW</th><th>Pokok Pajak</th><th>Denda</th><th>Total Tagihan</th><th>Tunggak (Thn)</th><th>Status Kontak</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>320616.005.003</td><td><div style="font-weight:600">Karsin</div><div class="nip">Kp. Cibitung RT 02</div></td><td>005</td><td class="nominal">67.000</td><td class="nominal" style="color:var(--merah)">3.350</td><td class="nominal" style="color:var(--merah)">70.350</td><td><span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">1 Thn</span></td><td><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Sudah Dihubungi</span></td><td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td></tr>
+              <tr><td>2</td><td>320616.002.018</td><td><div style="font-weight:600">Mamad Saefudin</div><div class="nip">Kp. Kasomalang RT 05</div></td><td>002</td><td class="nominal">160.000</td><td class="nominal" style="color:var(--merah)">48.000</td><td class="nominal" style="color:var(--merah)">208.000</td><td><span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">3 Thn</span></td><td><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Tidak Respon</span></td><td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td></tr>
+              <tr><td>3</td><td>320616.003.021</td><td><div style="font-weight:600">Nanu Sujana</div><div class="nip">Kp. Sindangkerta RT 01</div></td><td>003</td><td class="nominal">52.000</td><td class="nominal" style="color:var(--merah)">2.600</td><td class="nominal" style="color:var(--merah)">54.600</td><td><span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">1 Thn</span></td><td><span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Janji Bayar</span></td><td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td></tr>
+              <tr><td>4</td><td>320616.004.009</td><td><div style="font-weight:600">Didi Wahyudin</div><div class="nip">Kp. Rancabali RT 03</div></td><td>004</td><td class="nominal">95.000</td><td class="nominal" style="color:var(--merah)">9.500</td><td class="nominal" style="color:var(--merah)">104.500</td><td><span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">2 Thn</span></td><td><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Sudah Dihubungi</span></td><td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td></tr>
+              <tr><td>5</td><td>320616.001.044</td><td><div style="font-weight:600">Cucu Sumiati</div><div class="nip">Kp. Sindangjaya RT 04</div></td><td>001</td><td class="nominal">43.000</td><td class="nominal" style="color:var(--merah)">2.150</td><td class="nominal" style="color:var(--merah)">45.150</td><td><span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">1 Thn</span></td><td><span style="background:#eff6ff;color:#2563eb;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">Belum Dihubungi</span></td><td><button class="btn-sm">Detail</button><button class="btn-sm danger">Tagih</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /page-tunggakan -->
+
+
+    <!-- ========== PAGE: REKAPITULASI RW ========== -->
+    <div id="page-rw" style="display:none">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Rekapitulasi Per RW — 2024</div>
+          <div class="section-sub">Desa Kasomalang Kulon, 5 RW</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px">
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW 001</div>
+          <div style="font-size:28px;font-weight:800;color:var(--hijau)">94%</div>
+          <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">47 / 50 WP Lunas</div>
+          <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:94%"></div></div>
+          <div style="margin-top:12px;font-size:12px"><span style="color:#15803d;font-weight:700">Rp 3,82 Jt</span><br><span style="color:var(--teks-muted)">dari Rp 4,06 Jt</span></div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW 002</div>
+          <div style="font-size:28px;font-weight:800;color:var(--hijau)">88%</div>
+          <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">44 / 50 WP Lunas</div>
+          <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:88%"></div></div>
+          <div style="margin-top:12px;font-size:12px"><span style="color:#15803d;font-weight:700">Rp 3,91 Jt</span><br><span style="color:var(--teks-muted)">dari Rp 4,44 Jt</span></div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW 003</div>
+          <div style="font-size:28px;font-weight:800;color:var(--emas)">82%</div>
+          <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">37 / 45 WP Lunas</div>
+          <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:82%;background:var(--emas)"></div></div>
+          <div style="margin-top:12px;font-size:12px"><span style="color:#15803d;font-weight:700">Rp 3,28 Jt</span><br><span style="color:var(--teks-muted)">dari Rp 4,00 Jt</span></div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW 004</div>
+          <div style="font-size:28px;font-weight:800;color:var(--hijau)">91%</div>
+          <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">51 / 56 WP Lunas</div>
+          <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:91%"></div></div>
+          <div style="margin-top:12px;font-size:12px"><span style="color:#15803d;font-weight:700">Rp 4,55 Jt</span><br><span style="color:var(--teks-muted)">dari Rp 5,00 Jt</span></div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW 005</div>
+          <div style="font-size:28px;font-weight:800;color:var(--merah)">79%</div>
+          <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">37 / 47 WP Lunas</div>
+          <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:79%;background:var(--merah)"></div></div>
+          <div style="margin-top:12px;font-size:12px"><span style="color:#15803d;font-weight:700">Rp 2,90 Jt</span><br><span style="color:var(--teks-muted)">dari Rp 3,66 Jt</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Perbandingan Realisasi antar RW</div></div>
+        <div class="chart-wrap"><div style="position:relative;height:280px"><canvas id="chartRW" role="img" aria-label="Bar chart perbandingan RW">Data realisasi per RW</canvas></div></div>
+      </div>
+    </div><!-- /page-rw -->
+
+  </div><!-- /content -->
+</main>
+
+
+<!-- ============================== MODAL TAMBAH DATA ============================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--hijau);margin-right:8px"></i>Tambah Data SPPT Baru</div>
+      <div class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">NOP (Nomor Objek Pajak)</label><input class="form-input" type="text" placeholder="320616.XXX.XXX"></div>
+        <div class="form-group"><label class="form-label">Tahun Pajak</label><select class="form-input select"><option>2024</option><option>2023</option><option>2022</option></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-label">Nama Wajib Pajak</label><input class="form-input" type="text" placeholder="Nama lengkap sesuai KTP"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">RT</label><input class="form-input" type="text" placeholder="RT 001"></div>
+        <div class="form-group"><label class="form-label">RW</label><select class="form-input select"><option>RW 001</option><option>RW 002</option><option>RW 003</option><option>RW 004</option><option>RW 005</option></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-label">Alamat Lengkap</label><input class="form-input" type="text" placeholder="Kp. / Jl. ..."></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Luas Tanah (m²)</label><input class="form-input" type="number" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Luas Bangunan (m²)</label><input class="form-input" type="number" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Pokok Pajak (Rp)</label><input class="form-input" type="number" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Status Pembayaran</label><select class="form-input select"><option>Belum Bayar</option><option>Lunas</option><option>Cicilan</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tanggal Bayar (jika sudah)</label><input class="form-input" type="date"></div>
+        <div class="form-group"><label class="form-label">Metode Pembayaran</label><select class="form-input select"><option>-</option><option>Via Petugas</option><option>Transfer Bank</option><option>Bank BRI</option><option>BNI</option></select></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label class="form-label">Catatan</label><input class="form-input" type="text" placeholder="Opsional..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" style="padding:9px 18px" onclick="closeModal()">Batal</button>
+      <button class="btn-tambah" onclick="closeModal()"><i class="fas fa-save"></i> Simpan Data</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ===== DATA SAMPLE =====
+const sampleData = [
+  {no:1, nop:'320616.001.001', nama:'H. Asep Sunandar', alamat:'Kp. Sindangjaya RT 01 RW 001', luas:320, pokok:125000, tgl:'15 Jan 2024', status:'lunas', tahun:'2024'},
+  {no:2, nop:'320616.001.002', nama:'Wawan Kusuma', alamat:'Kp. Sindangjaya RT 02 RW 001', luas:180, pokok:42000, tgl:'25 Jul 2024', status:'lunas', tahun:'2024'},
+  {no:3, nop:'320616.001.003', nama:'Titi Suryati', alamat:'Kp. Sindangjaya RT 02 RW 001', luas:240, pokok:58000, tgl:'12 Mar 2024', status:'lunas', tahun:'2024'},
+  {no:4, nop:'320616.002.001', nama:'Andi Permana', alamat:'Kp. Kasomalang RT 01 RW 002', luas:195, pokok:88000, tgl:'20 Feb 2024', status:'lunas', tahun:'2024'},
+  {no:5, nop:'320616.002.015', nama:'Ibu Sari Dewi', alamat:'Kp. Kasomalang RT 03 RW 002', luas:210, pokok:78000, tgl:'24 Jul 2024', status:'lunas', tahun:'2024'},
+  {no:6, nop:'320616.002.018', nama:'Mamad Saefudin', alamat:'Kp. Kasomalang RT 05 RW 002', luas:400, pokok:160000, tgl:'—', status:'belum', tahun:'2024'},
+  {no:7, nop:'320616.003.008', nama:'Suhendi', alamat:'Kp. Sindangkerta RT 03 RW 003', luas:270, pokok:110000, tgl:'22 Jul 2024', status:'cicil', tahun:'2024'},
+  {no:8, nop:'320616.003.012', nama:'Dadang Suryana', alamat:'Kp. Sindangkerta RT 01 RW 003', luas:215, pokok:85000, tgl:'—', status:'belum', tahun:'2024'},
+  {no:9, nop:'320616.003.021', nama:'Nanu Sujana', alamat:'Kp. Sindangkerta RT 01 RW 003', luas:160, pokok:52000, tgl:'—', status:'belum', tahun:'2024'},
+  {no:10, nop:'320616.004.001', nama:'Hj. Enah', alamat:'Kp. Rancabali RT 01 RW 004', luas:190, pokok:38000, tgl:'18 Jul 2024', status:'lunas', tahun:'2024'},
+  {no:11, nop:'320616.004.007', nama:'Ujang Santoso', alamat:'Kp. Rancabali RT 02 RW 004', luas:280, pokok:95000, tgl:'05 Apr 2024', status:'lunas', tahun:'2024'},
+  {no:12, nop:'320616.004.009', nama:'Didi Wahyudin', alamat:'Kp. Rancabali RT 03 RW 004', luas:350, pokok:95000, tgl:'—', status:'belum', tahun:'2024'},
+  {no:13, nop:'320616.005.001', nama:'Entis Sutisna', alamat:'Kp. Cibitung RT 01 RW 005', luas:230, pokok:67000, tgl:'10 Jun 2024', status:'lunas', tahun:'2024'},
+  {no:14, nop:'320616.005.003', nama:'Karsin', alamat:'Kp. Cibitung RT 02 RW 005', luas:220, pokok:67000, tgl:'—', status:'belum', tahun:'2024'},
+  {no:15, nop:'320616.001.031', nama:'Ahmad Fauzi', alamat:'Kp. Sindangjaya RT 04 RW 001', luas:450, pokok:125000, tgl:'20 Jul 2024', status:'lunas', tahun:'2024'},
+];
+
+let filteredData = [...sampleData];
+let currentPage = 1;
+const perPage = 15;
+
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--teks-muted)">Tidak ada data ditemukan</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td style="color:var(--teks-muted)">${d.no}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:600">${d.nop}</td>
+      <td><div style="font-weight:600">${d.nama}</div></td>
+      <td><div style="font-size:12px;color:var(--teks-muted)">${d.alamat}</div></td>
+      <td style="text-align:center">${d.luas.toLocaleString('id')}</td>
+      <td class="nominal">Rp ${d.pokok.toLocaleString('id')}</td>
+      <td style="font-size:12px">${d.tgl}</td>
+      <td>
+        <span class="badge ${d.status}">
+          <dot></dot>
+          ${d.status === 'lunas' ? 'Lunas' : d.status === 'belum' ? 'Belum Bayar' : 'Cicilan'}
+        </span>
+      </td>
+      <td style="font-weight:600;text-align:center">${d.tahun}</td>
+      <td>
+        <button class="btn-sm" onclick="alert('Detail: ${d.nama}')">
+          <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn-sm" onclick="alert('Edit: ${d.nama}')">
+          <i class="fas fa-edit"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTable(val) {
+  val = val.toLowerCase();
+  filteredData = sampleData.filter(d =>
+    d.nama.toLowerCase().includes(val) ||
+    d.nop.toLowerCase().includes(val) ||
+    d.alamat.toLowerCase().includes(val)
+  );
+  renderTable(filteredData);
+  document.getElementById('pagInfo').textContent = `Menampilkan ${filteredData.length} dari ${sampleData.length} data`;
+}
+
+function filterStatus(val) {
+  filteredData = val ? sampleData.filter(d => d.status === val) : [...sampleData];
+  renderTable(filteredData);
+}
+
+function filterRW(val) {
+  filteredData = val ? sampleData.filter(d => d.nop.includes('.0' + val.slice(-2) + '.')) : [...sampleData];
+  renderTable(filteredData);
+}
+
+function changePage(dir) { currentPage = Math.max(1, currentPage + dir); }
+function goPage(n) {
+  document.querySelectorAll('.pag-btn').forEach(b => b.classList.remove('active'));
+  const t = ['pag1','pag2','pag3'];
+  if (t[n-1]) document.getElementById(t[n-1]).classList.add('active');
+}
+
+// ===== PAGE NAV =====
+const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan'];
+const pageTitles = {
+  dashboard: ['Dashboard SPPT 2024','Desa Kasomalang Kulon — Data per 25 Juli 2024'],
+  data: ['Data SPPT Desa Kasomalang Kulon','247 objek pajak terdaftar tahun 2024'],
+  pembayaran: ['Pembayaran SPPT 2024','Input & riwayat pembayaran pajak'],
+  laporan: ['Laporan SPPT','Ringkasan dan ekspor laporan'],
+  rw: ['Rekapitulasi Per RW','5 RW — Desa Kasomalang Kulon'],
+  tunggakan: ['Daftar Tunggakan 2024','31 wajib pajak belum bayar'],
+};
+
+function showPage(name) {
+  pages.forEach(p => {
+    document.getElementById('page-'+p).style.display = p === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach((el, i) => el.classList.remove('active'));
+  const titles = pageTitles[name];
+  document.getElementById('page-title').textContent = titles[0];
+  document.getElementById('page-sub').textContent = titles[1];
+
+  if (name === 'data') renderTable(sampleData);
+  if (name === 'rw') setTimeout(renderRWChart, 100);
+}
+
+function toggleTahun(el) {
+  const years = ['Tahun 2024','Tahun 2023','Tahun 2022'];
+  const cur = el.querySelector('span').textContent;
+  const next = years[(years.indexOf(cur)+1)%years.length];
+  el.querySelector('span').textContent = next;
+}
+
+// ===== MODAL =====
+function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+// ===== CHARTS =====
+let chartBulanan, chartPie, chartRW;
+
+function initCharts() {
+  // Chart Bulanan
+  const ctxB = document.getElementById('chartBulanan').getContext('2d');
+  chartBulanan = new Chart(ctxB, {
+    type: 'bar',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+      datasets: [{
+        label: 'WP Lunas',
+        data: [18,25,32,15,22,28,38,0,0,0,0,0],
+        backgroundColor: '#1a6b3c',
+        borderRadius: 6,
+        borderSkipped: false,
+      },{
+        label: 'WP Cicilan',
+        data: [2,3,1,2,3,4,8,0,0,0,0,0],
+        backgroundColor: '#c9962a',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Plus Jakarta Sans' } } },
+        y: { grid: { color: '#f0f0eb' }, ticks: { font: { size: 11 }, stepSize: 10 } }
+      }
+    }
+  });
+
+  // Chart Pie
+  const ctxP = document.getElementById('chartPie').getContext('2d');
+  chartPie = new Chart(ctxP, {
+    type: 'doughnut',
+    data: {
+      labels: ['Lunas','Belum Bayar','Cicilan'],
+      datasets: [{
+        data: [216, 31, 8],
+        backgroundColor: ['#1a6b3c','#c0392b','#c9962a'],
+        borderWidth: 3,
+        borderColor: '#fff',
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: (c) => ` ${c.label}: ${c.raw} WP`
+      }}}
+    }
+  });
+}
+
+function renderRWChart() {
+  if (chartRW) chartRW.destroy();
+  const ctx = document.getElementById('chartRW');
+  if (!ctx) return;
+  chartRW = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['RW 001','RW 002','RW 003','RW 004','RW 005'],
+      datasets: [
+        { label: 'Lunas', data: [47,44,37,51,37], backgroundColor: '#1a6b3c', borderRadius: 6 },
+        { label: 'Belum', data: [3,6,8,5,10], backgroundColor: '#c0392b', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12, family: 'Plus Jakarta Sans', weight: '600' } } },
+        y: { grid: { color: '#f0f0eb' }, ticks: { font: { size: 11 } }, stacked: false }
+      }
+    }
+  });
+}
+
+// INIT
+window.onload = () => {
+  initCharts();
+  renderTable(sampleData);
+};
+</script>
+
+</body>
+</html>
