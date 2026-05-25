@@ -273,7 +273,7 @@
 <main class="main">
   <div class="topbar">
     <div style="flex:1">
-      <div class="topbar-title" id="page-title">Dashboard SPPT 2024</div>
+      <div class="topbar-title" id="page-title">Dashboard SPPT 2026</div>
       <div class="topbar-sub" id="page-sub">Desa Kasomalang Kulon</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -282,7 +282,7 @@
         <span id="syncLabel">Memuat data...</span>
       </div>
       <select class="tahun-select" id="tahunSelect" onchange="switchTahun(this.value)" title="Pilih tahun pajak">
-        <option value="2024" selected>Tahun 2024</option>
+        <option value="2026" selected>Tahun 2026</option>
       </select>
       <button class="btn-export" onclick="window.print()"><i class="fas fa-download"></i> Export</button>
       <button class="btn-tambah" onclick="openModal()"><i class="fas fa-plus"></i> Tambah Data</button>
@@ -303,7 +303,7 @@
       <div class="progress-section anim">
         <div class="progress-header">
           <div>
-            <div class="progress-title">Realisasi Pembayaran SPPT <span id="prog-tahun">2024</span></div>
+            <div class="progress-title">Realisasi Pembayaran SPPT <span id="prog-tahun">2026</span></div>
             <div class="card-sub" style="margin-top:3px" id="prog-detail">Memuat data dari Supabase...</div>
           </div>
           <div class="progress-pct" id="prog-pct">—%</div>
@@ -314,7 +314,7 @@
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-header"><div><div class="card-title">Tren Pembayaran Bulanan <span id="chart-tahun">2024</span></div><div class="card-sub">WP yang membayar per bulan</div></div></div>
+          <div class="card-header"><div><div class="card-title">Tren Pembayaran Bulanan <span id="chart-tahun">2026</span></div><div class="card-sub">WP yang membayar per bulan</div></div></div>
           <div class="chart-wrap"><div style="position:relative;height:260px"><canvas id="chartBulanan"></canvas></div></div>
         </div>
         <div class="card">
@@ -336,7 +336,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Rekapitulasi Keuangan <span id="rekap-tahun">2024</span></div></div>
+          <div class="card-header"><div class="card-title">Rekapitulasi Keuangan <span id="rekap-tahun">2026</span></div></div>
           <div class="card-body" id="rekapKeuangan">
             <div class="page-loading" style="padding:10px"><div class="spinner"></div></div>
           </div>
@@ -353,7 +353,7 @@
         <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Cari nama, NOP, atau alamat..." oninput="applyFilters()" id="searchInput"></div>
         <select class="filter-sel" onchange="applyFilters()" id="filterStatus"><option value="">Semua Status</option><option value="lunas">Lunas</option><option value="belum">Belum Bayar</option></select>
         <select class="filter-sel" onchange="applyFilters()" id="filterRW"><option value="">Semua RW</option></select>
-        <select class="filter-sel" onchange="switchTahunData(this.value)" id="filterTahun"><option value="2024">Tahun 2024</option></select>
+        <select class="filter-sel" onchange="switchTahunData(this.value)" id="filterTahun"><option value="2026">Tahun 2026</option></select>
       </div>
       <div class="card">
         <div class="tbl-wrap"><table><thead><tr><th>#</th><th>NOP</th><th>Nama Wajib Pajak</th><th>RT/RW</th><th>Luas Tanah</th><th>Pokok Pajak</th><th>Tgl. Bayar</th><th>Status</th><th>Tahun</th><th>Aksi</th></tr></thead><tbody id="tableBody"><tr><td colspan="10"><div class="page-loading"><div class="spinner"></div><span>Memuat dari Supabase...</span></div></td></tr></tbody></table></div>
@@ -457,7 +457,7 @@
         <div class="card">
           <div class="card-header"><div class="card-title">Sinkronisasi Data</div></div>
           <div class="card-body">
-            <div class="summary-row"><span class="sk">Tahun aktif</span><span class="sv" id="settings-tahun">2024</span></div>
+            <div class="summary-row"><span class="sk">Tahun aktif</span><span class="sv" id="settings-tahun">2026</span></div>
             <div class="summary-row"><span class="sk">Tahun tersedia</span><span class="sv" id="settings-years">—</span></div>
             <div class="summary-row"><span class="sk">Kode blok aktif</span><span class="sv">001–014</span></div>
             <div class="summary-row"><span class="sk">Data dimuat</span><span class="sv" id="settings-total">—</span></div>
@@ -487,7 +487,7 @@
       <div class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></div>
     </div>
     <div class="modal-body">
-      <div class="form-row"><div class="form-group"><label class="form-label">NOP</label><input class="form-input" id="m-nop" type="text" placeholder="320616.XXX.XXX"></div><div class="form-group"><label class="form-label">Tahun Pajak</label><select class="form-input" id="m-tahun"><option>2024</option><option>2023</option><option>2022</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">NOP</label><input class="form-input" id="m-nop" type="text" placeholder="320616.XXX.XXX"></div><div class="form-group"><label class="form-label">Tahun Pajak</label><select class="form-input" id="m-tahun"><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option></select></div></div>
       <div class="form-row full"><div class="form-group"><label class="form-label">Nama Wajib Pajak</label><input class="form-input" id="m-nama" type="text" placeholder="Nama lengkap sesuai KTP"></div></div>
       <div class="form-row"><div class="form-group"><label class="form-label">RT</label><input class="form-input" id="m-rt" type="text" placeholder="RT 001"></div><div class="form-group"><label class="form-label">RW</label><input class="form-input" id="m-rw" type="text" placeholder="001"></div></div>
       <div class="form-row full"><div class="form-group"><label class="form-label">Alamat</label><input class="form-input" id="m-alamat" type="text" placeholder="Kp. / Jl. ..."></div></div>
@@ -516,9 +516,10 @@ let filteredData = [];
 let paymentData  = [];
 let currentPage  = 1;
 const PER_PAGE   = 15;
-let activeTahun  = 2024;
-let availableYears = [2024];
+let activeTahun  = 2026;
+let availableYears = [2026];
 let currentPageName = 'dashboard';
+let loadedSourceTahun = 2026;
 let chartBulanan, chartPie, chartRW;
 const normalizeRW = rw => String(rw || '').padStart(3, '0');
 const scopedRows = rows => rows || [];
@@ -577,31 +578,41 @@ function renderYearOptions() {
 }
 
 // ─── Load data from Supabase ─────────────────────────────
-async function loadData(tahun = 2024) {
+async function loadData(tahun = 2026) {
   setSyncStatus('loading', 'Memuat data...');
   try {
-    const pageSize = 1000;
-    let from = 0;
-    let rows = [];
+    async function fetchSpptRows(queryTahun) {
+      const pageSize = 1000;
+      let from = 0;
+      let rows = [];
+      while (true) {
+        const { data, error } = await db
+          .from('sppt')
+          .select('*')
+          .eq('tahun_pajak', queryTahun)
+          .order('rw', { ascending: true })
+          .order('nama_wp', { ascending: true })
+          .range(from, from + pageSize - 1);
 
-    while (true) {
-      const { data, error } = await db
-        .from('sppt')
-        .select('*')
-        .eq('tahun_pajak', tahun)
-        .order('rw', { ascending: true })
-        .order('nama_wp', { ascending: true })
-        .range(from, from + pageSize - 1);
+        if (error) throw error;
+        rows = rows.concat(data || []);
+        if (!data || data.length < pageSize) break;
+        from += pageSize;
+      }
+      return rows;
+    }
 
-      if (error) throw error;
-      rows = rows.concat(data || []);
-      if (!data || data.length < pageSize) break;
-      from += pageSize;
+    let rows = await fetchSpptRows(tahun);
+    loadedSourceTahun = tahun;
+    if (tahun === 2026 && rows.length === 0) {
+      rows = await fetchSpptRows(2024);
+      loadedSourceTahun = 2024;
     }
 
     allData = scopedRows(rows);
     filteredData = [...allData];
-    setSyncStatus('ok', `${allData.length} data · ${new Date().toLocaleTimeString('id-ID')}`);
+    const sourceNote = loadedSourceTahun !== tahun ? ` · sumber SPPT ${loadedSourceTahun}` : '';
+    setSyncStatus('ok', `${allData.length} data · ${new Date().toLocaleTimeString('id-ID')}${sourceNote}`);
 
     // Update nav badges
     const belum = allData.filter(d => d.status_bayar === 'belum').length;
@@ -1207,14 +1218,14 @@ async function showPage(name) {
 }
 
 async function switchTahun(val = activeTahun) {
-  activeTahun = parseInt(val || activeTahun || 2024, 10);
+  activeTahun = parseInt(val || activeTahun || 2026, 10);
   renderYearOptions();
   allData = [];
   await showPage(currentPageName || 'dashboard');
 }
 
 function switchTahunData(val) {
-  activeTahun = parseInt(val || activeTahun || 2024, 10);
+  activeTahun = parseInt(val || activeTahun || 2026, 10);
   renderYearOptions();
   allData = [];
   renderDataPage();
