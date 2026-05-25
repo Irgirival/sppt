@@ -250,7 +250,7 @@
   </div>
   <div class="nav-section">
     <div class="nav-label">Wilayah</div>
-    <div class="nav-item" onclick="showPage('rw')"><i class="fas fa-map-marked-alt"></i> Rekapitulasi per RW</div>
+    <div class="nav-item" onclick="showPage('rw')"><i class="fas fa-map-marked-alt"></i> Rekap per Kode Blok</div>
     <div class="nav-item" onclick="showPage('tunggakan')"><i class="fas fa-exclamation-circle"></i> Tunggakan <span class="badge-nav" id="nav-tunggakan" style="background:#c0392b">—</span></div>
   </div>
   <div class="nav-section">
@@ -430,10 +430,10 @@
 
     <!-- ========== RW ========== -->
     <div id="page-rw" style="display:none">
-      <div class="section-head"><div><div class="section-title">Rekapitulasi Per RW</div><div class="section-sub">Desa Kasomalang Kulon</div></div></div>
+      <div class="section-head"><div><div class="section-title">Rekapitulasi Per Kode Blok</div><div class="section-sub">Sementara dari segment NOP, nanti sinkron RT/RW asli</div></div></div>
       <div id="rwCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:24px"><div class="page-loading"><div class="spinner"></div></div></div>
       <div class="card">
-        <div class="card-header"><div class="card-title">Perbandingan Realisasi antar RW</div></div>
+        <div class="card-header"><div class="card-title">Perbandingan Realisasi antar Kode Blok</div></div>
         <div class="chart-wrap"><div style="position:relative;height:280px"><canvas id="chartRW"></canvas></div></div>
       </div>
     </div>
@@ -448,7 +448,7 @@
           <div class="card-body">
             <div class="summary-row"><span class="sk">Tahun aktif</span><span class="sv" id="settings-tahun">2024</span></div>
             <div class="summary-row"><span class="sk">Tahun tersedia</span><span class="sv" id="settings-years">—</span></div>
-            <div class="summary-row"><span class="sk">Wilayah resmi</span><span class="sv">RW 001–007</span></div>
+            <div class="summary-row"><span class="sk">Kode blok aktif</span><span class="sv">001–014</span></div>
             <div class="summary-row"><span class="sk">Data dimuat</span><span class="sv" id="settings-total">—</span></div>
             <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn-tambah" onclick="syncDatabase()"><i class="fas fa-sync"></i> Sinkronkan Ulang</button>
@@ -460,7 +460,7 @@
           <div class="card-header"><div class="card-title">Aturan Pembayaran</div></div>
           <div class="card-body">
             <div class="alert-item info" style="margin-bottom:10px"><i class="fas fa-info-circle alert-icon"></i><div class="alert-txt"><strong>Mode lunas penuh</strong><span>Pembayaran cukup pilih WP dari nama/NOP, tanggal bayar, dan metode. Sistem otomatis mencatat sebesar pokok pajak dan status lunas.</span></div></div>
-            <div class="alert-item warn"><i class="fas fa-map-marker-alt alert-icon"></i><div class="alert-txt"><strong>Batas wilayah</strong><span>Dashboard hanya menghitung RW 001 sampai RW 007 sesuai wilayah Desa Kasomalang Kulon.</span></div></div>
+            <div class="alert-item warn"><i class="fas fa-map-marker-alt alert-icon"></i><div class="alert-txt"><strong>Mapping sementara</strong><span>Kode 001 sampai 014 saat ini diambil dari segment NOP. Kalau file RT/RW asli sudah ada, data bisa disinkronkan ke kolom RT/RW sebenarnya.</span></div></div>
           </div>
         </div>
       </div>
@@ -508,9 +508,9 @@ let activeTahun  = 2024;
 let availableYears = [2024];
 let currentPageName = 'dashboard';
 let chartBulanan, chartPie, chartRW;
-const OFFICIAL_RWS = ['001','002','003','004','005','006','007'];
 const normalizeRW = rw => String(rw || '').padStart(3, '0');
-const officialRows = rows => (rows || []).filter(d => OFFICIAL_RWS.includes(normalizeRW(d.rw)));
+const scopedRows = rows => rows || [];
+const rwOptionsFromRows = rows => [...new Set((rows || []).map(d => normalizeRW(d.rw)).filter(Boolean))].sort();
 const paymentAmount = d => d.status_bayar === 'lunas' ? Number(d.jumlah_dibayar || d.pokok_pajak || 0) : 0;
 
 // ─── Sync status UI ──────────────────────────────────────
@@ -584,7 +584,7 @@ async function loadData(tahun = 2024) {
       from += pageSize;
     }
 
-    allData = officialRows(rows);
+    allData = scopedRows(rows);
     filteredData = [...allData];
     setSyncStatus('ok', `${allData.length} data · ${new Date().toLocaleTimeString('id-ID')}`);
 
@@ -670,7 +670,7 @@ async function renderDashboard() {
   document.getElementById('rwList').innerHTML = Object.entries(rwGroups).sort(([a],[b])=>a.localeCompare(b)).map(([rw, g]) => {
     const p = g.target > 0 ? ((g.terkumpul / g.target)*100).toFixed(0) : '0';
     return `<div class="rw-card">
-      <div class="rw-name">RW ${rw}</div>
+      <div class="rw-name">Kode/RW ${rw}</div>
       <div class="rw-pct" style="color:${rwColors(+p)}">${p}%</div>
       <div class="rw-detail">${g.lunas}/${g.total} WP Lunas</div>
       <div class="rw-mini-bar"><div class="rw-mini-fill" style="width:${Math.min(p,100)}%;background:${rwColors(+p)}"></div></div>
@@ -738,9 +738,9 @@ async function renderDataPage() {
   document.getElementById('data-sub').textContent = `Total ${allData.length} objek pajak terdaftar tahun ${activeTahun}`;
 
   // Populate RW filter
-  const rws = OFFICIAL_RWS;
+  const rws = rwOptionsFromRows(allData);
   const rwSel = document.getElementById('filterRW');
-  rwSel.innerHTML = '<option value="">Semua RW</option>' + rws.map(r => `<option value="${r}">RW ${r}</option>`).join('');
+  rwSel.innerHTML = '<option value="">Semua Kode/RW</option>' + rws.map(r => `<option value="${r}">Kode/RW ${r}</option>`).join('');
 
   applyFilters();
 }
@@ -859,7 +859,7 @@ async function renderRW() {
   document.getElementById('rwCards').innerHTML = Object.entries(rwGroups).sort(([a],[b])=>a.localeCompare(b)).map(([rw, g]) => {
     const p = g.target > 0 ? ((g.terkumpul/g.target)*100).toFixed(0) : 0;
     return `<div class="card" style="text-align:center;padding:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">RW ${rw}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--teks-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Kode/RW ${rw}</div>
       <div style="font-size:28px;font-weight:800;color:${rwColor(+p)}">${p}%</div>
       <div style="font-size:12px;color:var(--teks-muted);margin:4px 0">${g.lunas} / ${g.total} WP Lunas</div>
       <div class="rw-mini-bar" style="margin-top:10px"><div class="rw-mini-fill" style="width:${Math.min(p,100)}%;background:${rwColor(+p)}"></div></div>
@@ -868,7 +868,7 @@ async function renderRW() {
   }).join('');
 
   // RW bar chart
-  const labels = Object.keys(rwGroups).sort().map(r => 'RW ' + r);
+  const labels = Object.keys(rwGroups).sort().map(r => 'Kode/RW ' + r);
   const lunas  = Object.keys(rwGroups).sort().map(r => rwGroups[r].lunas);
   const belum  = Object.keys(rwGroups).sort().map(r => rwGroups[r].belum);
 
@@ -942,7 +942,7 @@ async function searchWP(val) {
     .or(`nama_wp.ilike.%${val}%,nop.ilike.%${val}%`)
     .limit(10);
 
-  const results = officialRows(data || []).slice(0, 5);
+  const results = scopedRows(data || []).slice(0, 5);
   if (!results.length) { document.getElementById('bayarResult').innerHTML = ''; return; }
   document.getElementById('bayarResult').innerHTML = `
     <div style="background:var(--abu);border-radius:10px;margin-bottom:12px;overflow:hidden;border:1px solid var(--abu-border)">
@@ -1075,10 +1075,10 @@ function exportTunggakan() {
 const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan','settings'];
 const pageMeta = {
   dashboard:   [`Dashboard SPPT ${activeTahun}`,'Desa Kasomalang Kulon'],
-  data:        ['Data SPPT','Desa Kasomalang Kulon · RW 001–007'],
+  data:        ['Data SPPT','Kode blok/NOP sementara 001–014'],
   pembayaran:  ['Pembayaran SPPT','Cari nama/NOP lalu simpan lunas'],
   laporan:     ['Laporan SPPT','Ringkasan dan ekspor laporan'],
-  rw:          ['Rekapitulasi Per RW','Desa Kasomalang Kulon · RW 001–007'],
+  rw:          ['Rekapitulasi Per Kode Blok','Mapping sementara dari NOP 001–014'],
   tunggakan:   ['Daftar Tunggakan','WP belum bayar'],
   settings:    ['Pengaturan','Sinkronisasi dan aturan aplikasi'],
 };
