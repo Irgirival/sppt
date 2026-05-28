@@ -404,10 +404,19 @@
       </div>
       <div class="card" style="margin-bottom:24px">
         <div class="card-header">
-          <div><div class="card-title">Laporan Pembayaran Per Hari</div><div class="card-sub">Untuk rekap setoran ke bank berdasarkan tanggal bayar</div></div>
-          <button class="btn-sm" onclick="exportPembayaranHarian()"><i class="fas fa-download"></i> Unduh CSV</button>
+          <div><div class="card-title">Laporan Pembayaran Per Rentang Tanggal</div><div class="card-sub">Pilih tanggal awal–akhir untuk rekap setoran ke bank</div></div>
+          <button class="btn-sm" onclick="exportPembayaranHarian()"><i class="fas fa-download"></i> Unduh Excel</button>
         </div>
-        <div class="card-body" id="laporanHarian"><div class="page-loading"><div class="spinner"></div></div></div>
+        <div class="card-body">
+          <div class="filter-bar" style="margin-bottom:14px">
+            <div class="form-group" style="min-width:160px"><label class="form-label">Dari Tanggal</label><input class="form-input" type="date" id="laporanStart" onchange="renderLaporanHarian(getLaporanRangeRows())"></div>
+            <div class="form-group" style="min-width:160px"><label class="form-label">Sampai Tanggal</label><input class="form-input" type="date" id="laporanEnd" onchange="renderLaporanHarian(getLaporanRangeRows())"></div>
+            <button class="btn-sm" onclick="setLaporanRange('today')">Hari ini</button>
+            <button class="btn-sm" onclick="setLaporanRange('month')">Bulan ini</button>
+            <button class="btn-sm" onclick="setLaporanRange('all')">Semua</button>
+          </div>
+          <div id="laporanHarian"><div class="page-loading"><div class="spinner"></div></div></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Ekspor Data</div></div>
@@ -415,11 +424,11 @@
           <div style="display:grid;gap:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--abu);border-radius:10px;border:1px solid var(--abu-border)">
               <div><div style="font-weight:700;font-size:13px"><i class="fas fa-file-excel" style="color:#15803d;margin-right:7px"></i>Excel — Rekap Semua WP</div><div style="font-size:11px;color:var(--teks-muted);margin-top:2px" id="exp-count">— baris</div></div>
-              <button class="btn-sm" onclick="exportCSV()"><i class="fas fa-download"></i> Unduh CSV</button>
+              <button class="btn-sm" onclick="exportExcel()"><i class="fas fa-download"></i> Unduh Excel</button>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--abu);border-radius:10px;border:1px solid var(--abu-border)">
               <div><div style="font-weight:700;font-size:13px"><i class="fas fa-file-alt" style="color:#2563eb;margin-right:7px"></i>Daftar Tunggakan</div><div style="font-size:11px;color:var(--teks-muted);margin-top:2px" id="exp-tunggakan-count">— WP belum bayar</div></div>
-              <button class="btn-sm" onclick="exportTunggakan()"><i class="fas fa-download"></i> Unduh CSV</button>
+              <button class="btn-sm" onclick="exportTunggakanExcel()"><i class="fas fa-download"></i> Unduh Excel</button>
             </div>
           </div>
         </div>
@@ -430,7 +439,7 @@
     <div id="page-tunggakan" style="display:none">
       <div class="section-head">
         <div><div class="section-title">Daftar Tunggakan SPPT</div><div class="section-sub" id="tunggakan-sub">Memuat...</div></div>
-        <button class="btn-export" onclick="exportTunggakan()"><i class="fas fa-file-csv"></i> Export CSV</button>
+        <button class="btn-export" onclick="exportTunggakanExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
       </div>
       <div class="card">
         <div class="tbl-wrap">
@@ -527,7 +536,30 @@ const rwOptionsFromRows = rows => [...new Set((rows || []).map(d => normalizeRW(
 const bapendaAmount = d => d.status_bayar === 'lunas' ? Number(d.jumlah_dibayar || d.pokok_pajak || 0) : 0;
 const paymentTotal = rows => (rows || []).reduce((s, p) => s + Number(p.jumlah || 0), 0);
 const isoDate = v => v ? String(v).slice(0, 10) : '';
+const todayIso = () => new Date().toISOString().slice(0, 10);
+const firstDayOfMonthIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`; };
 const csvCell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+const htmlCell = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+function exportXls(filename, sheetTitle, columns, rows) {
+  const table = `
+    <html><head><meta charset="UTF-8"></head><body>
+    <table border="1">
+      <tr><th colspan="${columns.length}" style="font-size:16px;text-align:left">${htmlCell(sheetTitle)}</th></tr>
+      <tr>${columns.map(c => `<th>${htmlCell(c.label)}</th>`).join('')}</tr>
+      ${rows.map(r => `<tr>${columns.map(c => `<td>${htmlCell(typeof c.value === 'function' ? c.value(r) : r[c.key])}</td>`).join('')}</tr>`).join('')}
+    </table></body></html>`;
+  downloadBlob(new Blob(['\ufeff' + table], { type: 'application/vnd.ms-excel;charset=utf-8;' }), filename);
+}
 
 // ─── Sync status UI ──────────────────────────────────────
 function setSyncStatus(state, msg) {
@@ -659,6 +691,45 @@ function groupPaymentsByDate(rows) {
   return Object.values(groups).sort((a,b) => b.tgl.localeCompare(a.tgl));
 }
 
+function syncedPaymentRows() {
+  const realKeys = new Set((paymentData || []).map(tx => tx.sppt_id || tx.nop).filter(Boolean));
+  const fromBapenda = (allData || [])
+    .filter(d => d.status_bayar === 'lunas' && Number(d.jumlah_dibayar || d.pokok_pajak || 0) > 0 && !realKeys.has(d.id) && !realKeys.has(d.nop))
+    .map(d => ({
+      sppt_id: d.id,
+      nop: d.nop,
+      nama_wp: d.nama_wp,
+      tahun_pajak: activeTahun,
+      jumlah: Number(d.jumlah_dibayar || d.pokok_pajak || 0),
+      tgl_bayar: d.tgl_bayar || '',
+      metode_bayar: d.metode_bayar || 'Sinkron BAPENDA',
+      sumber: 'BAPENDA',
+      sppt: { nama_wp: d.nama_wp, nop: d.nop, rw: d.rw, rt: d.rt, pokok_pajak: d.pokok_pajak }
+    }));
+  return [...fromBapenda, ...(paymentData || []).map(tx => ({ ...tx, sumber: tx.sumber || 'Website Desa' }))];
+}
+
+function getLaporanRangeRows() {
+  const rows = syncedPaymentRows();
+  const start = document.getElementById('laporanStart')?.value || '';
+  const end = document.getElementById('laporanEnd')?.value || '';
+  return rows.filter(tx => {
+    const t = isoDate(tx.tgl_bayar);
+    if (!t) return !start && !end; // Data awal BAPENDA tanpa tanggal hanya muncul saat filter Semua.
+    return (!start || t >= start) && (!end || t <= end);
+  });
+}
+
+function setLaporanRange(mode) {
+  const s = document.getElementById('laporanStart');
+  const e = document.getElementById('laporanEnd');
+  if (!s || !e) return;
+  if (mode === 'today') { s.value = todayIso(); e.value = todayIso(); }
+  if (mode === 'month') { s.value = firstDayOfMonthIso(); e.value = todayIso(); }
+  if (mode === 'all') { s.value = ''; e.value = ''; }
+  renderLaporanHarian(getLaporanRangeRows());
+}
+
 // ─── Dashboard ───────────────────────────────────────────
 async function renderDashboard() {
   const data = await loadData(activeTahun);
@@ -670,7 +741,7 @@ async function renderDashboard() {
   const cicil  = 0;
   const target = data.reduce((s, d) => s + (d.pokok_pajak || 0), 0);
   const realisasiBapenda = data.reduce((s, d) => s + bapendaAmount(d), 0);
-  const pembayaranDesa = paymentTotal(paymentData);
+  const pembayaranDesa = paymentTotal(syncedPaymentRows());
   const denda = data.reduce((s, d) => s + (d.denda || 0), 0);
   const pct = target > 0 ? ((pembayaranDesa / target) * 100).toFixed(1) : '0.0';
 
@@ -958,10 +1029,11 @@ async function renderLaporan() {
   const target = allData.reduce((s,d) => s + (d.pokok_pajak || 0), 0);
   const realisasiBapenda = allData.reduce((s,d) => s + bapendaAmount(d), 0);
   const persenBapenda = target > 0 ? ((realisasiBapenda / target) * 100).toFixed(1) : '0.0';
-  const desaTotal = paymentTotal(paymentData);
-  const desaCount = paymentData.length;
-  const today = new Date().toISOString().slice(0,10);
-  const todayRows = paymentData.filter(tx => isoDate(tx.tgl_bayar) === today);
+  const syncedRows = syncedPaymentRows();
+  const desaTotal = paymentTotal(syncedRows);
+  const desaCount = syncedRows.length;
+  const today = todayIso();
+  const todayRows = syncedRows.filter(tx => isoDate(tx.tgl_bayar) === today);
   const todayTotal = paymentTotal(todayRows);
 
   document.getElementById('laporanTahunan').innerHTML = `
@@ -975,13 +1047,16 @@ async function renderLaporan() {
     <div class="summary-row"><span class="sk">Persentase</span><span class="sv">${persenBapenda}%</span></div>`;
 
   document.getElementById('laporanPembayaranSummary').innerHTML = `
-    <div class="summary-row"><span class="sk">Transaksi dicatat desa</span><span class="sv">${desaCount}</span></div>
-    <div class="summary-row"><span class="sk">Total pembayaran desa</span><span class="sv" style="color:var(--hijau)">${rupiah(desaTotal)}</span></div>
+    <div class="summary-row"><span class="sk">SPPT lunas tersinkron</span><span class="sv">${desaCount}</span></div>
+    <div class="summary-row"><span class="sk">Total pembayaran desa + BAPENDA</span><span class="sv" style="color:var(--hijau)">${rupiah(desaTotal)}</span></div>
     <div class="summary-row"><span class="sk">Pembayaran hari ini</span><span class="sv">${todayRows.length} WP</span></div>
     <div class="summary-row"><span class="sk">Total hari ini</span><span class="sv" style="color:var(--hijau)">${rupiah(todayTotal)}</span></div>
-    <div style="font-size:11px;color:var(--teks-muted);margin-top:12px;line-height:1.5">Catatan: angka ini hanya dari input pembayaran di website. Realisasi BAPENDA tetap ditampilkan terpisah supaya setoran harian desa tidak tercampur dengan data awal Excel.</div>`;
+    <div style="font-size:11px;color:var(--teks-muted);margin-top:12px;line-height:1.5">Catatan: pembayaran desa sudah disinkronkan dengan status lunas BAPENDA, jadi desa tidak mulai dari nol. Transaksi input website tetap masuk sebagai riwayat setoran bertanggal.</div>`;
 
-  renderLaporanHarian(paymentData);
+  const s = document.getElementById('laporanStart');
+  const e = document.getElementById('laporanEnd');
+  if (s && e && !s.value && !e.value) { s.value = firstDayOfMonthIso(); e.value = todayIso(); }
+  renderLaporanHarian(getLaporanRangeRows());
   document.getElementById('exp-count').textContent = total + ' baris · Tahun ' + activeTahun;
   document.getElementById('exp-tunggakan-count').textContent = belum + ' WP belum bayar';
 }
@@ -990,22 +1065,24 @@ function renderLaporanHarian(rows) {
   const groups = groupPaymentsByDate(rows);
   const el = document.getElementById('laporanHarian');
   if (!groups.length) {
-    el.innerHTML = '<div style="padding:8px 0;color:var(--teks-muted);font-size:13px">Belum ada pembayaran yang dicatat lewat website untuk tahun ini.</div>';
+    el.innerHTML = '<div style="padding:8px 0;color:var(--teks-muted);font-size:13px">Tidak ada transaksi bertanggal pada rentang ini. Saldo awal BAPENDA tetap dihitung di ringkasan pembayaran desa.</div>';
     return;
   }
-  el.innerHTML = groups.map(g => `
+  const grandTotal = paymentTotal(rows);
+  el.innerHTML = `<div class="summary-row" style="background:var(--hijau-pale);padding:12px;border-radius:10px;margin-bottom:12px"><span class="sk">Total rentang terpilih</span><span class="sv" style="color:var(--hijau)">${rows.length} WP · ${rupiah(grandTotal)}</span></div>` + groups.map(g => `
     <div style="border:1px solid var(--abu-border);border-radius:10px;margin-bottom:12px;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--abu);padding:12px 14px">
         <div style="font-weight:800">${g.tgl === 'Tanpa tanggal' ? g.tgl : new Date(g.tgl).toLocaleDateString('id-ID')}</div>
         <div style="font-weight:800;color:var(--hijau)">${g.rows.length} WP · ${rupiah(g.total)}</div>
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>NOP</th><th>Nama WP</th><th>Kode/RW</th><th>Metode</th><th>Jumlah</th></tr></thead><tbody>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>NOP</th><th>Nama WP</th><th>Kode/RW</th><th>Metode</th><th>Sumber</th><th>Jumlah</th></tr></thead><tbody>
         ${g.rows.map((tx, i) => `<tr>
           <td>${i+1}</td>
           <td style="font-family:monospace;font-size:12px">${tx.nop || tx.sppt?.nop || '—'}</td>
           <td><div style="font-weight:600">${tx.nama_wp || tx.sppt?.nama_wp || '—'}</div></td>
           <td>${tx.sppt?.rw || '—'}</td>
           <td>${tx.metode_bayar || '—'}</td>
+          <td>${tx.sumber || 'Website Desa'}</td>
           <td class="nominal" style="color:var(--hijau)">${rupiah(tx.jumlah)}</td>
         </tr>`).join('')}
       </tbody></table></div>
@@ -1151,40 +1228,47 @@ async function confirmDelete(id, nama) {
   renderTable();
 }
 
-// ─── Export CSV ───────────────────────────────────────────
-function exportCSV() {
+// ─── Export Excel ─────────────────────────────────────────
+function exportExcel() {
   if (!allData.length) { alert('Data belum dimuat'); return; }
-  const cols = ['nop','nama_wp','rt','rw','alamat','luas_tanah','pokok_pajak','status_bayar','tgl_bayar','jumlah_dibayar','metode_bayar','tahun_pajak'];
-  const rows = [cols.join(','), ...allData.map(d => cols.map(c => csvCell(d[c])).join(','))];
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `SPPT_${activeTahun}_Kasomalang_Kulon.csv`;
-  a.click();
+  const cols = [
+    { label:'NOP', key:'nop' }, { label:'Nama WP', key:'nama_wp' }, { label:'RT', key:'rt' }, { label:'RW', key:'rw' },
+    { label:'Alamat', key:'alamat' }, { label:'Luas Tanah', key:'luas_tanah' }, { label:'Luas Bangunan', key:'luas_bangunan' },
+    { label:'Pokok Pajak', key:'pokok_pajak' }, { label:'Status', key:'status_bayar' }, { label:'Tanggal Bayar', key:'tgl_bayar' },
+    { label:'Jumlah Dibayar', key:'jumlah_dibayar' }, { label:'Metode Bayar', key:'metode_bayar' }, { label:'Tahun Pajak', key:'tahun_pajak' }
+  ];
+  exportXls(`SPPT_${activeTahun}_Kasomalang_Kulon.xls`, `Data SPPT ${activeTahun} Desa Kasomalang Kulon`, cols, allData);
 }
 
 function exportPembayaranHarian() {
-  if (!paymentData.length) { alert('Belum ada pembayaran harian untuk diekspor'); return; }
-  const cols = ['tgl_bayar','nop','nama_wp','metode_bayar','jumlah','tahun_pajak'];
-  const rows = [cols.join(','), ...paymentData.map(tx => cols.map(c => csvCell(tx[c])).join(','))];
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `Pembayaran_Harian_${activeTahun}.csv`;
-  a.click();
+  const rows = getLaporanRangeRows();
+  if (!rows.length) { alert('Tidak ada pembayaran pada rentang tanggal terpilih'); return; }
+  const cols = [
+    { label:'Tanggal Bayar', value: tx => isoDate(tx.tgl_bayar) || 'Data awal BAPENDA' },
+    { label:'NOP', value: tx => tx.nop || tx.sppt?.nop || '' },
+    { label:'Nama WP', value: tx => tx.nama_wp || tx.sppt?.nama_wp || '' },
+    { label:'RT', value: tx => tx.sppt?.rt || '' },
+    { label:'RW', value: tx => tx.sppt?.rw || '' },
+    { label:'Metode Bayar', key:'metode_bayar' },
+    { label:'Sumber', value: tx => tx.sumber || 'Website Desa' },
+    { label:'Jumlah', key:'jumlah' },
+    { label:'Tahun Pajak', key:'tahun_pajak' }
+  ];
+  exportXls(`Pembayaran_${activeTahun}_Kasomalang_Kulon.xls`, `Pembayaran SPPT ${activeTahun}`, cols, rows);
 }
 
-function exportTunggakan() {
+function exportTunggakanExcel() {
   const tg = allData.filter(d => d.status_bayar === 'belum');
   if (!tg.length) { alert('Tidak ada tunggakan'); return; }
-  const cols = ['nop','nama_wp','rw','alamat','pokok_pajak'];
-  const rows = [cols.join(','), ...tg.map(d => cols.map(c => csvCell(d[c])).join(','))];
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `Tunggakan_${activeTahun}.csv`;
-  a.click();
+  const cols = [
+    { label:'NOP', key:'nop' }, { label:'Nama WP', key:'nama_wp' }, { label:'RT', key:'rt' }, { label:'RW', key:'rw' },
+    { label:'Alamat', key:'alamat' }, { label:'Pokok Pajak', key:'pokok_pajak' }, { label:'Tahun Pajak', key:'tahun_pajak' }
+  ];
+  exportXls(`Tunggakan_${activeTahun}_Kasomalang_Kulon.xls`, `Daftar Tunggakan SPPT ${activeTahun}`, cols, tg);
 }
+
+function exportCSV() { exportExcel(); }
+function exportTunggakan() { exportTunggakanExcel(); }
 
 // ─── Navigasi ────────────────────────────────────────────
 const pages = ['dashboard','data','pembayaran','laporan','rw','tunggakan','settings'];
